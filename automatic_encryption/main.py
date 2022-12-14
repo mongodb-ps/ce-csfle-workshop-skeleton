@@ -1,6 +1,7 @@
 # CSFLE Automatic Encryption skeleton code
 
 import sys
+import names
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
 from pymongo.encryption_options import AutoEncryptionOpts
@@ -69,10 +70,12 @@ def main():
     sys.exit(1)
   encrypted_db = secure_client[encrypted_db_name]
 
+  firstname = names.get_first_name()
+  lastname = names.get_last_name()
   payload = {
     "name": {
-      "firstName": "Poorna",
-      "lastName": "Consultant",
+      "firstName": firstname,
+      "lastName": lastname,
       "otherNames": None,
     },
     "address": {
