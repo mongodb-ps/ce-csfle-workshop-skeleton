@@ -91,7 +91,7 @@ def main():
   lastname = names.get_last_name()
 
   # PUT CODE HERE TO RETRIEVE OUR COMMON (our first) DEK:
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})["_id"]
   if data_key_id_1 != None:
     print(err)
     sys.exit(1)
