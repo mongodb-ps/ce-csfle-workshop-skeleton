@@ -3,9 +3,8 @@
 from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
-from bson.binary import Binary
 from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
-from bson.binary import STANDARD
+from bson.binary import STANDARD, Binary
 from pymongo.encryption import ClientEncryption
 from datetime import datetime
 import sys
@@ -120,6 +119,9 @@ def main():
 
     # Retrieve the DEK UUID
     data_key_id_1 = client_encryption.get_key_by_alt_name("dataKey1")["_id"]
+    if data_key_id_1 is None:
+      print("Failed to find DEK")
+      sys.exit()
 
     # Do deterministic fields
     payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
@@ -132,6 +134,12 @@ def main():
     payload["phoneNumber"] = client_encryption.encrypt(payload["phoneNumber"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
     payload["salary"] = client_encryption.encrypt(payload["salary"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
     payload["taxIdentifier"] = client_encryption.encrypt(payload["taxIdentifier"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+
+    # Test if the data is encrypted
+    for data in [ payload["name"]["firstName"], payload["name"]["lastName"], payload["address"], payload["dob"], payload["phoneNumber"], payload["salary"], payload["taxIdentifier"]]:
+      if type(data) is not Binary or data.subtype != 6:
+        print("Data is not encrypted")
+        sys.exit()
 
     result = client[encrypted_db_name][encrypted_coll_name].insert_one(payload)
 

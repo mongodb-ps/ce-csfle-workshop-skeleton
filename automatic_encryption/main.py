@@ -10,7 +10,6 @@ from pymongo import MongoClient
 from pprint import pprint
 from datetime import datetime
 
-
 # IN VALUES HERE!
 PETNAME = 
 MDB_PASSWORD = 
@@ -60,6 +59,9 @@ def main():
 
   # retrieve the DEK UUID
   data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAtlName": "dataKey1"},{"_id": 0, "keyAtlName": 1})
+  if data_key_id_1 is None:
+    print("Failed to find DEK")
+    sys.exit()
   
   encrypted_db_name = "companyData"
   encrypted_coll_name = "employee"
@@ -95,7 +97,9 @@ def main():
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    }
+    },
+    crypt_shared_lib_required = True,
+    mongocryptd_bypass_spawn = True
   )
 
   secure_client, err = mdb_client(config_data, auto_encryption_opts=auto_encryption)

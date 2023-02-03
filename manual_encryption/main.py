@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
 from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
-from bson.binary import STANDARD
+from bson.binary import STANDARD, Binary
 from pymongo.encryption import ClientEncryption
 from datetime import datetime
 import sys
@@ -70,9 +70,6 @@ def main():
     }
   )
 
-  # retrieve the DEK UUID
-  data_key_id_1 = # Put code here to find the _id of the DEK we created previously
-
   payload = {
     "name": {
       "firstName": "Manish",
@@ -97,8 +94,21 @@ def main():
 
   try:
 
-    # put your code here to encrypt the required fields
+    # retrieve the DEK UUID
+    data_key_id_1 = # Put code here to find the _id of the DEK we created previously
+    if data_key_id_1 is None:
+      print("Failed to find DEK")
+      sys.exit()
+
+    # WRITE CODE HERE TO ENCRYPT THE APPROPRIATE FIELDS
     # Don't forget to handle to event of name.otherNames being null
+
+
+    # Test if the data is encrypted
+    for data in [ payload["name"]["firstName"], payload["name"]["lastName"], payload["address"], payload["dob"], payload["phoneNumber"], payload["salary"], payload["taxIdentifier"]]:
+      if type(data) is not Binary and data.subtype != 6:
+        print("Data is not encrypted")
+        sys.exit()
 
   except EncryptionError as e:
     print(f"Encryption error: {e}")
