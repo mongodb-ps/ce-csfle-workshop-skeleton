@@ -3,13 +3,18 @@
 from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
-from pymongo.encryption import Algorithm
+from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
 from bson.binary import STANDARD
 from pymongo.encryption import ClientEncryption
 from datetime import datetime
 import sys
 
 
+# IN VALUES HERE!
+PETNAME = 
+MDB_PASSWORD = 
+
+# create our MongoClient with the required attributes, and test the connection
 def mdb_client(db_data):
   try:
     client = MongoClient(db_data['DB_CONNECTION_STRING'], serverSelectionTimeoutMS=db_data['DB_TIMEOUT'], tls=True, tlsCAFile=db_data['DB_SSL_CA'])
@@ -22,30 +27,36 @@ def main():
 
   # Obviously this should not be hardcoded
   config_data = {
-    "DB_CONNECTION_STRING": "mongodb://app_user:<PASSWORD>@csfle-mongodb-<PETNAME>.mdbtraining.net",
+    "DB_CONNECTION_STRING": f"mongodb://app_user:{MDB_PASSWORD}@csfle-mongodb-{PETNAME}.mdbtraining.net",
     "DB_TIMEOUT": 5000,
     "DB_SSL_CA": "/etc/pki/tls/certs/ca.cert"
   }
 
-
+  # Declare or key vault namespce
   keyvault_namespace = f"__encryption.__keyVault"
+
+  # declare our key provider type
   provider = "kmip"
 
+  # declare our key provider attributes
   kms_provider = {
     provider: {
-      "endpoint": "csfle-kmip-<PETNAME>.mdbtraining.net"
+      "endpoint": f"csfle-kmip-{PETNAME}.mdbtraining.net"
     }
   }
   
+  # declare our database and collection
   encrypted_db_name = "companyData"
   encrypted_coll_name = "employee"
 
+  # instantiate our MongoDB Client object
   client, err = mdb_client(config_data)
   if err != None:
     print(err)
     sys.exit(1)
 
 
+  # Instantiate our ClientEncryption object
   client_encryption = ClientEncryption(
     kms_provider,
     keyvault_namespace,
