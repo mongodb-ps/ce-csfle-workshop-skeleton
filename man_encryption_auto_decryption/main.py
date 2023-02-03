@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
 from bson.binary import Binary
-from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
+from pymongo.encryption import Algorithm
 from bson.binary import STANDARD
 from pymongo.encryption import ClientEncryption
 from pymongo.encryption_options import AutoEncryptionOpts
@@ -24,29 +24,6 @@ def mdb_client(db_data, auto_encryption_opts=None):
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
     return None, f"Cannot connect to database, please check settings in config file: {e}"
-
-# test if we have a binary value with subtype 6, if true this is encrypted data, therefore decrypt it
-def decrypt_data(client_encryption, data):
-  try:
-    if type(data) == Binary and data.subtype == 6:
-
-      # PUT YOUR DECRYPTION CODE HERE
-      decrypted_data = 
-
-      return decrypted_data
-    else:
-      return data
-  except EncryptionError as e:
-    raise e
-
-# traverse the whole BSON document, call the decrypt function when we have scalar values
-def transverse_bson(client_encryption, data):
-  if isinstance(data, list):
-    return [transverse_bson(client_encryption, v) for v in data]
-  elif isinstance(data, dict):
-    return {k: transverse_bson(client_encryption, v) for k, v in data.items()}
-  else:
-    return decrypt_data(client_encryption, data)
 
 def main():
 
@@ -99,13 +76,16 @@ def main():
     kms_provider,
     keyvault_namespace,
     schema_map = , # WHAT DO WE PUT HERE?
-    bypass_auto_encrpytion = True, # we do not want to autoencrypt
+    bypass_auto_encryption = True, # we do not want to autoencrypt
     kms_tls_options = {
       "kmip": {
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    }
+    },
+    crypt_shared_lib_required = True,
+    mongocryptd_bypass_spawn = True,
+    crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
   encrypted_client, err = mdb_client(config_data, auto_encryption)
@@ -144,16 +124,19 @@ def main():
       sys.exit()
 
     # Do deterministic fields
-    payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
-    payload["name"]["lastName"] = client_encryption.encrypt(payload["name"]["lastName"], AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    payload["name"]["lastName"] = client_encryption.encrypt(payload["name"]["lastName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
 
     # Do random fields
-    payload["name"]["otherNames"] = client_encryption.encrypt(payload["name"]["otherNames"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["address"] = client_encryption.encrypt(payload["AEAD_AES_256_CBC_HMAC_SHA_512_Random"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["dob"] = client_encryption.encrypt(payload["dob"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["phoneNumber"] = client_encryption.encrypt(payload["phoneNumber"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["salary"] = client_encryption.encrypt(payload["salary"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["taxIdentifier"] = client_encryption.encrypt(payload["taxIdentifier"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    if payload["name"]["otherNames"] is None:
+      del(payload["name"]["otherNames"])
+    else:
+      payload["name"]["otherNames"] = client_encryption.encrypt(payload["name"]["otherNames"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["address"] = client_encryption.encrypt(payload["address"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["dob"] = client_encryption.encrypt(payload["dob"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["phoneNumber"] = client_encryption.encrypt(payload["phoneNumber"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["salary"] = client_encryption.encrypt(payload["salary"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["taxIdentifier"] = client_encryption.encrypt(payload["taxIdentifier"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
 
     # Test if the data is encrypted
     for data in [ payload["name"]["firstName"], payload["name"]["lastName"], payload["address"], payload["dob"], payload["phoneNumber"], payload["salary"], payload["taxIdentifier"]]:
@@ -166,7 +149,7 @@ def main():
     print(result.inserted_id)
 
     # Encrypted data to query 
-    name =  client_encryption.encrypt("Poorna", AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    encrypted_name =  client_encryption.encrypt("Poorna", Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
 
   except EncryptionError as e:
     print(f"Encryption error: {e}")

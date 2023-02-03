@@ -91,14 +91,14 @@ def main():
   lastname = names.get_last_name()
 
   # PUT CODE HERE TO RETRIEVE OUR COMMON (our first) DEK:
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAtlName": "dataKey1"},{"_id": 0, "keyAtlName": 1})
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})
   if data_key_id_1 != None:
     print(err)
     sys.exit(1)
 
   # retrieve the DEK UUID
   _, err = get_employee_key(client_encryption, employee_id, provider, '1')
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -130,9 +130,9 @@ def main():
   schema_map = {
     "companyData.employee": {
       "bsonType": "object",
-      "encryptMeta": {
+      "encryptMetadata": {
         "keyId": "/_id",
-        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Random"
+        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
       },
       "properties": {
         "name": {
@@ -142,14 +142,14 @@ def main():
               "encrypt" : {
                 "keyId": data_key_id_1,
                 "bsonType": "string",
-                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic"
+                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
             },
             "lastName": {
               "encrypt" : {
                 "keyId": data_key_id_1,
                 "bsonType": "string",
-                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic"
+                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
             },
             "otherNames": {
@@ -166,7 +166,7 @@ def main():
         },
         "dob": {
           "encrypt": {
-            "bsonType": "datetime"
+            "bsonType": "date"
           }
         },
         "phoneNumber": {
@@ -197,7 +197,10 @@ def main():
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    }
+    },
+    crypt_shared_lib_required = True,
+    mongocryptd_bypass_spawn = True,
+    crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
   secure_client, err = mdb_client(config_data, auto_encryption_opts=auto_encryption)

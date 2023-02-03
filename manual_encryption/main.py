@@ -3,7 +3,7 @@
 from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
-from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
+from pymongo.encryption import Algorithm
 from bson.binary import STANDARD, Binary
 from pymongo.encryption import ClientEncryption
 from datetime import datetime

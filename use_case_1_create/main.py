@@ -4,7 +4,7 @@ import names
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
 from pymongo.encryption_options import AutoEncryptionOpts
-from pymongo.encryption import ClientEncryption
+from pymongo.encryption import ClientEncryption, Algorithm
 from bson.binary import STANDARD, Binary
 from pymongo import MongoClient
 from pprint import pprint
@@ -82,7 +82,9 @@ def main():
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    }
+    },
+    crypt_shared_lib_required = True,
+    mongocryptd_bypass_spawn = True
   )
 
   employee_id = str("%05d" % randint(0,99999))
@@ -91,7 +93,7 @@ def main():
 
   # retrieve the DEK UUID
   employee_key_id, err = get_employee_key(client_encryption, employee_id, provider, '1')
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -123,9 +125,9 @@ def main():
   schema_map = {
     "companyData.employee": {
       "bsonType": "object",
-      "encryptMeta": {
+      "encryptMetadata": {
         "keyId": , # PUT APPROPRIATE CODE OR VARIABLE HERE
-        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Random"
+        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
       },
       "properties": {
         "name": {
@@ -145,7 +147,7 @@ def main():
         },
         "dob": {
           "encrypt": {
-            "bsonType": "datetime"
+            "bsonType": "date"
           }
         },
         "phoneNumber": {
@@ -176,7 +178,10 @@ def main():
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    }
+    },
+    crypt_shared_lib_required = True,
+    mongocryptd_bypass_spawn = True,
+    crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
   secure_client, err = mdb_client(config_data, auto_encryption_opts=auto_encryption)

@@ -3,7 +3,7 @@
 from pymongo import MongoClient
 from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from bson.codec_options import CodecOptions
-from pymongo.encryption.Algorithm import AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, AEAD_AES_256_CBC_HMAC_SHA_512_Random
+from pymongo.encryption import Algorithm
 from bson.binary import STANDARD, Binary
 from pymongo.encryption import ClientEncryption
 from datetime import datetime
@@ -38,11 +38,11 @@ def decrypt_data(client_encryption, data):
     raise e
 
 # traverse the whole BSON document, call the decrypt function when we have scalar values
-def transverse_bson(client_encryption, data):
+def traverse_bson(client_encryption, data):
   if isinstance(data, list):
-    return [transverse_bson(client_encryption, v) for v in data]
+    return [traverse_bson(client_encryption, v) for v in data]
   elif isinstance(data, dict):
-    return {k: transverse_bson(client_encryption, v) for k, v in data.items()}
+    return {k: traverse_bson(client_encryption, v) for k, v in data.items()}
   else:
     return decrypt_data(client_encryption, data)
 
@@ -124,16 +124,19 @@ def main():
       sys.exit()
 
     # Do deterministic fields
-    payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
-    payload["name"]["lastName"] = client_encryption.encrypt(payload["name"]["lastName"], AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    payload["name"]["lastName"] = client_encryption.encrypt(payload["name"]["lastName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
 
     # Do random fields
-    payload["name"]["otherNames"] = client_encryption.encrypt(payload["name"]["otherNames"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["address"] = client_encryption.encrypt(payload["AEAD_AES_256_CBC_HMAC_SHA_512_Random"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["dob"] = client_encryption.encrypt(payload["dob"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["phoneNumber"] = client_encryption.encrypt(payload["phoneNumber"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["salary"] = client_encryption.encrypt(payload["salary"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
-    payload["taxIdentifier"] = client_encryption.encrypt(payload["taxIdentifier"], AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    if payload["name"]["otherNames"] is None:
+      del(payload["name"]["otherNames"])
+    else:
+      payload["name"]["otherNames"] = client_encryption.encrypt(payload["name"]["otherNames"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["address"] = client_encryption.encrypt(payload["address"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["dob"] = client_encryption.encrypt(payload["dob"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["phoneNumber"] = client_encryption.encrypt(payload["phoneNumber"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["salary"] = client_encryption.encrypt(payload["salary"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
+    payload["taxIdentifier"] = client_encryption.encrypt(payload["taxIdentifier"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Random, data_key_id_1)
 
     # Test if the data is encrypted
     for data in [ payload["name"]["firstName"], payload["name"]["lastName"], payload["address"], payload["dob"], payload["phoneNumber"], payload["salary"], payload["taxIdentifier"]]:
@@ -149,15 +152,16 @@ def main():
     print(f"Encryption error: {e}")
     sys.exit()
 
-  encrypted_doc = client[encrypted_db_name][encrypted_coll_name].find_one({"name.firstName": name})
 
-  print(encrypted_doc)
   try:
 
-    # PUT CODE HERE TO ENCRYPT THE FIRSTNAME YOU ARE LOOKING FOR
-    name = 
+    # WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
+    encrypted_name = 
+    encrypted_doc = client[encrypted_db_name][encrypted_coll_name].find_one({"name.firstName": encrypted_name})
+    print(encrypted_doc)
 
-    decrypted_doc = transverse_bson(client_encryption, encrypted_doc)
+    # GO TO THE traverse_bson FUNCTION
+    decrypted_doc = traverse_bson(client_encryption, encrypted_doc)
     print(decrypted_doc)
 
   except EncryptionError as e:

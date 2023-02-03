@@ -58,8 +58,32 @@ def main():
     print(err)
     sys.exit(1)
 
+  firstname = names.get_first_name()
+  lastname = names.get_last_name()
+  payload = {
+    "name": {
+      "firstName": firstname,
+      "lastName": lastname,
+      "otherNames": None,
+    },
+    "address": {
+      "streetAddress": "2 Bson Street",
+      "suburbCounty": "Mongoville",
+      "stateProvince": "Victoria",
+      "zipPostcode": "3999",
+      "country": "Oz"
+    },
+    "dob": datetime(1980, 10, 11),
+    "phoneNumber": "1800MONGO",
+    "salary": 999999.99,
+    "taxIdentifier": "78SD20NN001",
+    "role": [
+      "CIO"
+    ]
+  }
+
   # retrieve the DEK UUID
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAtlName": "dataKey1"},{"_id": 0, "keyAtlName": 1})
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})
   if data_key_id_1 is None:
     print("Failed to find DEK")
     sys.exit()
@@ -69,9 +93,9 @@ def main():
   schema_map = {
     "companyData.employee": {
       "bsonType": "object",
-      "encryptMeta": {
+      "encryptMetadata": {
         "keyId": data_key_id_1,
-        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Random"
+        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
       },
       "properties": {
         "name": {
@@ -80,13 +104,13 @@ def main():
             "firstName": {
               "encrypt" : {
                 "bsonType": "string",
-                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic"
+                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
             },
             "lastName": {
               "encrypt" : {
                 "bsonType": "string",
-                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic"
+                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
             },
             "otherNames": {
@@ -103,7 +127,7 @@ def main():
         },
         "dob": {
           "encrypt": {
-            "bsonType": "datetime"
+            "bsonType": "date"
           }
         },
         "phoneNumber": {
@@ -136,7 +160,8 @@ def main():
       }
     },
     crypt_shared_lib_required = True,
-    mongocryptd_bypass_spawn = True
+    mongocryptd_bypass_spawn = True,
+    crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
   secure_client, err = mdb_client(config_data, auto_encryption_opts=auto_encryption)
@@ -144,7 +169,12 @@ def main():
     print(err)
     sys.exit(1)
 
+  if payload["name"]["otherNames"] is None:
+    del(payload["name"]["otherNames"])
+
   try:
+    result = secure_client[encrypted_db_name][encrypted_coll_name].insert_one(payload)
+    print(result.inserted_id)
 
     # PUT CODE HERE TO QUERY THE SALARY FIELD
     decrypted_doc = 
