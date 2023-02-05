@@ -91,15 +91,15 @@ def main():
   lastname = names.get_last_name()
 
   # PUT CODE HERE TO RETRIEVE OUR COMMON (our first) DEK:
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})
-  if data_key_id_1 != None:
-    print(err)
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 1})["_id"]
+  if data_key_id_1 is None:
+    print("Common DEK missing")
     sys.exit(1)
 
   # retrieve the DEK UUID
   _, err = get_employee_key(client_encryption, employee_id, provider, '1')
   if err != None:
-    print(err)
+    print("User DEK missing")
     sys.exit(1)
 
   payload = {
@@ -140,14 +140,14 @@ def main():
           "properties": {
             "firstName": {
               "encrypt" : {
-                "keyId": data_key_id_1,
+                "keyId": [ data_key_id_1 ],
                 "bsonType": "string",
                 "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
             },
             "lastName": {
               "encrypt" : {
-                "keyId": data_key_id_1,
+                "keyId": [ data_key_id_1 ],
                 "bsonType": "string",
                 "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
               }
@@ -210,7 +210,7 @@ def main():
   encrypted_db = secure_client[encrypted_db_name]
 
   # remove `name.otherNames` if None because wwe cannot encrypt none
-  if payload["name"]["otherNames"] == None:
+  if payload["name"]["otherNames"] is None:
     del(payload["name"]["otherNames"])
 
   try:
@@ -222,13 +222,13 @@ def main():
 
   try: 
     result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": firstname, "name.lastName": lastname})
+
+    pprint(result)
   except EncryptionError as e:
     print(f"Encryption error: {e}")
     sys.exit(1)
 
-  pprint(result)
-
-  client[keyvault_db][keyvault_coll].delete_one({"keyAltName": employee_id})
+  client[keyvault_db][keyvault_coll].delete_one({"keyAltNames": employee_id})
   result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": firstname, "name.lastName": lastname})
   pprint(result)
 
@@ -236,12 +236,13 @@ def main():
 
   try: 
     result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": firstname, "name.lastName": lastname})
+    
+    pprint(result)
   except EncryptionError as e:
     print(f"Encryption error: {e}")
     sys.exit(1)
 
 
-  pprint(result)
 
 if __name__ == "__main__":
   main()
