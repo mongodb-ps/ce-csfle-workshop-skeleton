@@ -19,10 +19,6 @@ var (
 	MDB_PASSWORD =
 )
 
-type SchemaObject struct {
-	deterministic [][]string
-	random        [][]string
-}
 func createClient(c string) (*mongo.Client, error) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c))
 
@@ -36,6 +32,23 @@ func createClient(c string) (*mongo.Client, error) {
 func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string, tlsOps map[string]*tls.Config) (*mongo.ClientEncryption, error) {
 	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp).SetTLSConfig(tlsOps)
 	client, err := mongo.NewClientEncryption(c, o)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func createAutoEncryptionClient(c string, ns string, kms map[string]map[string]interface{}, tlsOps map[string]*tls.Config, s bson.M) (*mongo.Client, error) {
+	autoEncryptionOpts := options.AutoEncryption().
+		SetKeyVaultNamespace(ns).
+		SetKmsProviders(kms).
+		SetSchemaMap(s).
+		SetBypassAutoEncryption(true).
+		SetTLSConfig(tlsOps)
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c).SetAutoEncryptionOptions(autoEncryptionOpts))
+
 	if err != nil {
 		return nil, err
 	}
@@ -64,43 +77,6 @@ func encryptManual(ce *mongo.ClientEncryption, dek primitive.Binary, alg string,
 	return out, nil
 }
 
-func decryptManual(c *mongo.ClientEncryption, d primitive.Binary)(bson.RawValue, error) {
-	out, err := c.Decrypt(context.TODO(), d)
-	if err != nil {
-		return bson.RawValue{}, err
-	}
-
-	return out, nil
-}
-
-func traverseBson(c *mongo.ClientEncryption, d bson.M) (bson.M, error) {
-	for k, v := range d {
-		a, ok := v.(primitive.M)
-		if ok {
-			data, err := traverseBson(c, a)
-			if err != nil {
-				return bson.M{}, err
-			}
-			d[k] = data
-		} else {
-			// Check if binary Subtype 6 data, e.g. encrypted. Skip if it is not
-			i, ok := v.(primitive.Binary)
-			if !ok {
-				// not binary data
-				continue
-			}
-			if i.Subtype == 6 {
-				data, err := decryptManual(c, i)
-				if err != nil {
-					return bson.M{}, err
-				}
-				d[k] = data
-			}
-		}
-	}
-	return d, nil
-}
-
 func main() {
 	var (
 		keyVaultDB 			 = "__encryption"
@@ -109,13 +85,14 @@ func main() {
 		connectionString = "mongodb://app_user:" + MDB_PASSWORD + "@csfle-mongodb-" + PETNAME + ".mdbtraining.net/?replicaSet=rs0&tls=true&tlsCAFile=%2Fetc%2Fpki%2Ftls%2Fcerts%2Fca.cert"
 		kmipEndpoint     = "csfle-kmip-" + PETNAME + ".mdbtraining.net"
 		clientEncryption *mongo.ClientEncryption
+		encryptedClient  *mongo.Client
 		client           *mongo.Client
 		exitCode         = 0
 		result           *mongo.InsertOneResult
 		dekFindResult    bson.M
 		findResult			 bson.M
-		outputData			 bson.M
 		dek              primitive.Binary
+		encryptedName		primitive.Binary
 		kmipTLSConfig    *tls.Config
 		err							 error
 	)
@@ -162,24 +139,34 @@ func main() {
 		return
 	}
 
+	// Auto Encryption Client
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, bson.M{})
+	if err != nil {
+		fmt.Printf("MDB encrypted client error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	encryptedColl := encryptedClient.Database("companyData").Collection("employee")
+	
   payload := bson.M{
     "name": bson.M{
-      "firstName": "Kuber",
-      "lastName": "Engineer",
+      "firstName": "Poorna",
+      "lastName": "Muggle",
       "otherNames": nil,
     },
     "address": bson.M{
-      "streetAddress": "12 Bson Street",
+      "streetAddress": "29 Bson Street",
       "suburbCounty": "Mongoville",
       "stateProvince": "Victoria",
       "zipPostcode": "3999",
       "country": "Oz",
     },
-    "dob": time.Date(1981, 11, 11, 0, 0, 0, 0, time.Local),
+    "dob": time.Date(1999, 1, 12, 0, 0, 0, 0, time.Local),
     "phoneNumber": "1800MONGO",
     "salary": 999999.99,
-    "taxIdentifier": "78SDSSNN001",
-    "role": []string{"DEV"},
+    "taxIdentifier": "78SDSSWN001",
+    "role": []string{"CE"},
   }
 
 	// Retrieve our DEK
@@ -266,7 +253,16 @@ func main() {
 	}
 	fmt.Print(result.InsertedID)
 
-	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": name["firstName"]}).Decode(&findResult)
+
+	encryptedName, err = encryptManual(clientEncryption, dek, "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic", "Poorna")
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	// WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
+	err = 
 	if err != nil {
 		fmt.Printf("MongoDB find error: %s\n", err)
 		exitCode = 1
@@ -278,14 +274,6 @@ func main() {
 		return
 	}
 	fmt.Printf("%+v\n", findResult)
-
-	outputData, err = traverseBson(clientEncryption, findResult)
-	if err != nil {
-		fmt.Printf("Encryption error: %s\n", err)
-		exitCode = 1
-		return
-	}
-	fmt.Printf("%+v\n", outputData)
 
 	exitCode = 0
 }

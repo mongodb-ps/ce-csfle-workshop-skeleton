@@ -93,6 +93,7 @@ def main():
     print(err)
     sys.exit(1)
 
+
   payload = {
     "name": {
       "firstName": "Poorna",
@@ -155,10 +156,14 @@ def main():
     print(f"Encryption error: {e}")
     sys.exit()
 
-  # PUT CODE HERE TO RETRIEVE AND AUTOMATICALLY DECRYPT THE DOCUMENT
-  encrypted_doc = 
+  # WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
+  try:
+    encrypted_doc = 
 
-  print(encrypted_doc)
+    print(encrypted_doc)
+  except EncryptionError as e:
+    print(f"Encryption error: {e}")
+    sys.exit()
 
 
 

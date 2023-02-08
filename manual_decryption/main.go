@@ -282,6 +282,12 @@ func main() {
 
 	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
 	outputData, err = traverseBson(clientEncryption, findResult)
+	if err != nil {
+		fmt.Printf("Encryption error: %s\n", err)
+		exitCode = 1
+		return
+	}
+	fmt.Printf("%+v\n", outputData)
 
 	exitCode = 0
 }
