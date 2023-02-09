@@ -58,7 +58,7 @@ def main():
     sys.exit(1)
 
   # retrieve the DEK UUID
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 1})
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 1})["_id"]
   if data_key_id_1 is None:
     print("Failed to find DEK")
     sys.exit()
@@ -78,7 +78,7 @@ def main():
           "firstName": {
             "encrypt" : {
               "bsonType": "string",
-              "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic"
+              "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
             },
             # PUT MORE FIELDS IN HERE
           }
