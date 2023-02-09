@@ -69,7 +69,7 @@ func nameGenerator()(string, string) {
 	return firstName, lastName
 }
 
-def main(){
+func main(){
 	var (
 		keyVaultDB 			 = "__encryption"
 		keyVaultColl 		 = "__keyVault"
@@ -85,27 +85,27 @@ def main(){
 		kmipTLSConfig    *tls.Config
 		err							 error
 	)
-	
+
 	defer func() {
 		os.Exit(exitCode)
 	}()
-	
+
 	provider := "kmip"
 	kmsProvider := map[string]map[string]interface{}{
 		provider: {
 			"endpoint": kmipEndpoint,
 		},
 	}
-	
+
 	client, err = createClient(connectionString)
 	if err != nil {
 		fmt.Printf("MDB client error: %s\n", err)
 		exitCode = 1
 		return
 	}
-	
+
 	coll := client.Database("__encryption").Collection("__keyVault")
-	
+
 	// Set the KMIP TLS options
 	kmsTLSOptions := make(map[string]*tls.Config)
 	tlsOptions := map[string]interface{}{
@@ -119,7 +119,7 @@ def main(){
 		return
 	}
 	kmsTLSOptions["kmip"] = kmipTLSConfig
-	
+
 	firstname, lastname := nameGenerator()
 	payload := bson.M{
 		"name": bson.M{
@@ -140,7 +140,7 @@ def main(){
 		"taxIdentifier": "78SDSSWN001",
 		"role": []string{"Student"},
 	}
-	
+
 	// Retrieve our DEK
 	opts := options.FindOne().SetProjection(bson.D{{Key: "_id", Value: 1}})
 	err = coll.FindOne(context.TODO(), bson.D{{Key: "keyAltNames", Value: "dataKey1"}}, opts).Decode(&dekFindResult)
@@ -150,15 +150,15 @@ def main(){
 		return
 	}
 	dek = dekFindResult["_id"].(primitive.Binary)
-	
-	
+
+
 	db := "companyData"
 	collection := "employee"
-	
+
 	schemaMap := bson.M{
 		// PUT YOUR SCHEMA MAP CODE HERE
 	}
-	
+
 	// Auto Encryption Client
 	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, schemaMap)
 	if err != nil {
@@ -166,16 +166,16 @@ def main(){
 		exitCode = 1
 		return
 	}
-	
+
 	encryptedColl := encryptedClient.Database(db).Collection(collection)
-	
+
 	// remove the otherNames field if it is nil
 	name := payload["name"].(bson.M)
 	if name["otherNames"] == nil {
 		fmt.Println("Removing nil")
 		delete(name, "otherNames")
 	}
-	
+
 	result, err = encryptedColl.InsertOne(context.TODO(), payload)
 	if err != nil {
 		fmt.Printf("Insert error: %s\n", err)
@@ -183,7 +183,7 @@ def main(){
 		return
 	}
 	fmt.Print(result.InsertedID)
-	
+
 	exitCode = 0
 }
 	

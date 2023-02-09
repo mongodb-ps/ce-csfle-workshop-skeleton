@@ -191,10 +191,8 @@ def main():
   encrypted_db = secure_client[encrypted_db_name]
 
   # ENCRYPT THE name.firstName and name.lastName here
-  enc_first_name = # use the YOUR_FIRSTNAME variable
-  enc_last_name = # use the YOUR_LASTNAME variable
-  payload["name"]["firstName"] = enc_first_name
-  payload["name"]["lastName"] = enc_last_name
+  payload["name"]["firstName"] = client_encryption.encrypt(firstname, Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, employee_key_id)
+  payload["name"]["lastName"] = client_encryption.encrypt(lastname, Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, employee_key_id)
 
   if type(payload["name"]["firstName"]) is not Binary or type(payload["name"]["lastName"]) is not Binary or payload["name"]["firstName"].subtype != 6 or payload["name"]["lastName"].subtype != 6:
     print("Data is not encrypted")
@@ -213,7 +211,7 @@ def main():
 
 
   try: 
-    result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": enc_first_name, "name.lastName": enc_last_name})
+    result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": firstname, "name.lastName": enc_last_name})
   except EncryptionError as e:
     print(f"Encryption error: {e}")
     sys.exit(1)
