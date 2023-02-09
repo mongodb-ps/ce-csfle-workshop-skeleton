@@ -82,9 +82,7 @@ def main():
         "tlsCAFile": "/etc/pki/tls/certs/ca.cert",
         "tlsCertificateKeyFile": "/home/ec2-user/server.pem"
       }
-    },
-    crypt_shared_lib_required = True,
-    mongocryptd_bypass_spawn = True
+    }
   )
 
   employee_id = str("%05d" % randint(0,99999))
