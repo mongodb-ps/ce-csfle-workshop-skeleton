@@ -83,7 +83,7 @@ def main():
   }
 
   # retrieve the DEK UUID
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 1})["_id"]
   if data_key_id_1 is None:
     print("Failed to find DEK")
     sys.exit()
