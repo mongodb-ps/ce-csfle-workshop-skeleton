@@ -18,11 +18,7 @@ var (
 	MDB_PASSWORD =
 )
 
-type SchemaObject struct {
-	deterministic [][]string
-	random        [][]string
-}
-
+// Function to create MognoDB client instance
 func createClient(c string) (*mongo.Client, error) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c))
 
@@ -33,6 +29,7 @@ func createClient(c string) (*mongo.Client, error) {
 	return client, nil
 }
 
+// Function to create the MognoDB ClientEncryption instance
 func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string) (*mongo.ClientEncryption, error) {
 	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp)
 	client, err := mongo.NewClientEncryption(c, o)
@@ -43,6 +40,7 @@ func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]inte
 	return client, nil
 }
 
+// Function to perform the manual encryption
 func encryptManual(ce *mongo.ClientEncryption, dek primitive.Binary, alg string, data interface{}) (primitive.Binary, error) {
 	var out primitive.Binary
 	rawValueType, rawValueData, err := bson.MarshalValue(data)

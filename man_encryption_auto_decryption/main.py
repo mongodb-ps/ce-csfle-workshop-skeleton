@@ -1,25 +1,40 @@
-# CSFLE Manual Encryption skeleton code
-
-from pymongo import MongoClient
-from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
-from bson.codec_options import CodecOptions
 from bson.binary import Binary
-from pymongo.encryption import Algorithm
 from bson.binary import STANDARD
+from bson.codec_options import CodecOptions
+from datetime import datetime
+from pymongo import MongoClient
+from pymongo.encryption import Algorithm
 from pymongo.encryption import ClientEncryption
 from pymongo.encryption_options import AutoEncryptionOpts
-from datetime import datetime
+from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
+from urllib.parse import quote_plus
 import sys
-
 
 # IN VALUES HERE!
 PETNAME = 
 MDB_PASSWORD = 
+APP_USER = "app_user"
+CA_PATH = "/etc/pki/tls/certs/ca.cert"
 
-# create our MongoClient with the required attributes, and test the connection
-def mdb_client(db_data, auto_encryption_opts=None):
+def mdb_client(connection_string, auto_encryption_opts=None):
+  """ Returns a MongoDB client instance
+  
+  Creates a  MongoDB client instance and tests the client via a `hello` to the server
+  
+  Parameters
+  ------------
+    connection_string: string
+      MongoDB connection string URI containing username, password, host, port, tls, etc
+  Return
+  ------------
+    client: mongo.MongoClient
+      MongoDB client instance
+    err: error
+      Error message or None of successful
+  """
+
   try:
-    client = MongoClient(db_data['DB_CONNECTION_STRING'], serverSelectionTimeoutMS=db_data['DB_TIMEOUT'], tls=True, tlsCAFile=db_data['DB_SSL_CA'], auto_encryption_opts=auto_encryption_opts)
+    client = MongoClient(connection_string)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
@@ -28,14 +43,16 @@ def mdb_client(db_data, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  config_data = {
-    "DB_CONNECTION_STRING": f"mongodb://app_user:{MDB_PASSWORD}@csfle-mongodb-{PETNAME}.mdbtraining.net",
-    "DB_TIMEOUT": 5000,
-    "DB_SSL_CA": "/etc/pki/tls/certs/ca.cert"
-  }
+  connection_string = "mongodb://%s:%s@%s/?" % (
+    quote_plus(APP_USER),
+    quote_plus(MDB_PASSWORD),
+    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+  )
 
   # Declare or key vault namespce
-  keyvault_namespace = f"__encryption.__keyVault"
+  keyvault_db = "__encryption"
+  keyvault_coll = "__keyVault"
+  keyvault_namespace = f"{keyvault_db}.{keyvault_coll}"
 
   # declare our key provider type
   provider = "kmip"
@@ -52,7 +69,7 @@ def main():
   encrypted_coll_name = "employee"
 
   # instantiate our MongoDB Client object
-  client, err = mdb_client(config_data)
+  client, err = mdb_client(connection_string)
   if err != None:
     print(err)
     sys.exit(1)
@@ -88,7 +105,7 @@ def main():
     crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
-  encrypted_client, err = mdb_client(config_data, auto_encryption)
+  encrypted_client, err = mdb_client(connection_string, auto_encryption)
   if err != None:
     print(err)
     sys.exit(1)

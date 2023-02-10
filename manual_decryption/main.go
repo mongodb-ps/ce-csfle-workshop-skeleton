@@ -19,10 +19,7 @@ var (
 	MDB_PASSWORD =
 )
 
-type SchemaObject struct {
-	deterministic [][]string
-	random        [][]string
-}
+// Function to create MognoDB client instance
 func createClient(c string) (*mongo.Client, error) {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c))
 
@@ -33,8 +30,9 @@ func createClient(c string) (*mongo.Client, error) {
 	return client, nil
 }
 
-func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string, tlsOps map[string]*tls.Config) (*mongo.ClientEncryption, error) {
-	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp).SetTLSConfig(tlsOps)
+// Function to create the MognoDB ClientEncryption instance
+func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string) (*mongo.ClientEncryption, error) {
+	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp)
 	client, err := mongo.NewClientEncryption(c, o)
 	if err != nil {
 		return nil, err
@@ -43,6 +41,7 @@ func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]inte
 	return client, nil
 }
 
+// Function to perform the manual encryption
 func encryptManual(ce *mongo.ClientEncryption, dek primitive.Binary, alg string, data interface{}) (primitive.Binary, error) {
 	var out primitive.Binary
 	rawValueType, rawValueData, err := bson.MarshalValue(data)
@@ -73,6 +72,10 @@ func decryptManual(c *mongo.ClientEncryption, d primitive.Binary)(bson.RawValue,
 	return out, nil
 }
 
+
+// Function that traverses a BSON object and determines if the type is a primitive,
+// if so, we check if this is a binary subtype 6 and then call the manual decrypt function
+// to decrypt the value. We call the same function if arrays or subdocuments are found
 func traverseBson(c *mongo.ClientEncryption, d bson.M) (bson.M, error) {
 	for k, v := range d {
 		a, ok := v.(primitive.M)

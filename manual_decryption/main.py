@@ -1,30 +1,62 @@
-# CSFLE Manual Encryption skeleton code
-
-from pymongo import MongoClient
-from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
-from bson.codec_options import CodecOptions
-from pymongo.encryption import Algorithm
 from bson.binary import STANDARD, Binary
-from pymongo.encryption import ClientEncryption
+from bson.codec_options import CodecOptions
 from datetime import datetime
+from pymongo import MongoClient
+from pymongo.encryption import Algorithm
+from pymongo.encryption import ClientEncryption
+from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
+from urllib.parse import quote_plus
 import sys
 
 
 # IN VALUES HERE!
 PETNAME = 
 MDB_PASSWORD = 
+APP_USER = "app_user"
+CA_PATH = "/etc/pki/tls/certs/ca.cert"
 
-# create our MongoClient with the required attributes, and test the connection
-def mdb_client(db_data):
+def mdb_client(connection_string, auto_encryption_opts=None):
+  """ Returns a MongoDB client instance
+  
+  Creates a  MongoDB client instance and tests the client via a `hello` to the server
+  
+  Parameters
+  ------------
+    connection_string: string
+      MongoDB connection string URI containing username, password, host, port, tls, etc
+  Return
+  ------------
+    client: mongo.MongoClient
+      MongoDB client instance
+    err: error
+      Error message or None of successful
+  """
+
   try:
-    client = MongoClient(db_data['DB_CONNECTION_STRING'], serverSelectionTimeoutMS=db_data['DB_TIMEOUT'], tls=True, tlsCAFile=db_data['DB_SSL_CA'])
+    client = MongoClient(connection_string)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
     return None, f"Cannot connect to database, please check settings in config file: {e}"
 
-# test if we have a binary value with subtype 6, if true this is encrypted data, therefore decrypt it
 def decrypt_data(client_encryption, data):
+  """ Returns a decrypted value if the input is encrypted, or returns the input value
+
+  Tests the input value to determine if it is a BSON binary subtype 6 (aka encrypted data).
+  If true, the value is decrypted. If false the input value is returned
+
+  Parameters
+  -----------
+    client_encryption: mongo.ClientEncryption
+      Instantiated mongo.ClientEncryption instance
+    data: value
+      A value to be tested, and decrypted if required
+  Return
+  -----------
+    data/unencrypted_data: value
+      unencrypted or input value
+  """
+
   try:
     if type(data) == Binary and data.subtype == 6:
 
@@ -37,8 +69,24 @@ def decrypt_data(client_encryption, data):
   except EncryptionError as e:
     raise e
 
-# traverse the whole BSON document, call the decrypt function when we have scalar values
 def traverse_bson(client_encryption, data):
+  """ Iterates over a object/value and determines if the value is a scalar or document
+  
+  Tests the input value is a list or dictionary, if not calls the `decrypt_data` function, if
+  true it calls itself with the value as the input. 
+
+  Parameters
+  -----------
+    client_encryption: mongo.ClientEncryption
+      Instantiated mongo.ClientEncryption instance
+    data: value
+      A value to be tested, and decrypted if required
+  Return
+  -----------
+    data/unencrypted_data: value
+      unencrypted or input value
+  """
+
   if isinstance(data, list):
     return [traverse_bson(client_encryption, v) for v in data]
   elif isinstance(data, dict):
@@ -49,14 +97,16 @@ def traverse_bson(client_encryption, data):
 def main():
 
   # Obviously this should not be hardcoded
-  config_data = {
-    "DB_CONNECTION_STRING": f"mongodb://app_user:{MDB_PASSWORD}@csfle-mongodb-{PETNAME}.mdbtraining.net",
-    "DB_TIMEOUT": 5000,
-    "DB_SSL_CA": "/etc/pki/tls/certs/ca.cert"
-  }
+  connection_string = "mongodb://%s:%s@%s/?" % (
+    quote_plus(APP_USER),
+    quote_plus(MDB_PASSWORD),
+    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+  )
 
   # Declare or key vault namespce
-  keyvault_namespace = f"__encryption.__keyVault"
+  keyvault_db = "__encryption"
+  keyvault_coll = "__keyVault"
+  keyvault_namespace = f"{keyvault_db}.{keyvault_coll}"
 
   # declare our key provider type
   provider = "kmip"
@@ -73,7 +123,7 @@ def main():
   encrypted_coll_name = "employee"
 
   # instantiate our MongoDB Client object
-  client, err = mdb_client(config_data)
+  client, err = mdb_client(connection_string)
   if err != None:
     print(err)
     sys.exit(1)

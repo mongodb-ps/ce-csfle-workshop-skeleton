@@ -1,31 +1,71 @@
-# CSFLE Use Case skeleton code
-import sys
-import names
-from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
-from bson.codec_options import CodecOptions
-from pymongo.encryption_options import AutoEncryptionOpts
-from pymongo.encryption import ClientEncryption
-from pymongo.encryption import Algorithm
 from bson.binary import STANDARD, Binary, UUID_SUBTYPE
-from pymongo import MongoClient
-from pprint import pprint
+from bson.codec_options import CodecOptions
 from datetime import datetime
+from pprint import pprint
+from pymongo import MongoClient
+from pymongo.encryption import Algorithm
+from pymongo.encryption import ClientEncryption
+from pymongo.encryption_options import AutoEncryptionOpts
+from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
 from random import randint
+from urllib.parse import quote_plus
+import names
+import sys
 
 # IN VALUES HERE!
 PETNAME = 
 MDB_PASSWORD = 
+APP_USER = "app_user"
+CA_PATH = "/etc/pki/tls/certs/ca.cert"
 
-# create our MongoClient with the required attributes, and test the connection
-def mdb_client(db_data, auto_encryption_opts=None):
+def mdb_client(connection_string, auto_encryption_opts=None):
+  """ Returns a MongoDB client instance
+  
+  Creates a  MongoDB client instance and tests the client via a `hello` to the server
+  
+  Parameters
+  ------------
+    connection_string: string
+      MongoDB connection string URI containing username, password, host, port, tls, etc
+  Return
+  ------------
+    client: mongo.MongoClient
+      MongoDB client instance
+    err: error
+      Error message or None of successful
+  """
+
   try:
-    client = MongoClient(db_data['DB_CONNECTION_STRING'], serverSelectionTimeoutMS=db_data['DB_TIMEOUT'], tls=True, tlsCAFile=db_data['DB_SSL_CA'], auto_encryption_opts=auto_encryption_opts)
+    client = MongoClient(connection_string)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
     return None, f"Cannot connect to database, please check settings in config file: {e}"
 
 def get_employee_key(client, altName, provider_name, keyId):
+  """ Return a DEK's UUID for a give KeyAltName. Creates a new DEK if the DEK is not found.
+  
+  Queries a key vault for a particular KeyAltName and returns the UUID of the DEK, if found.
+  If not found, the UUID and Key Provider object and CMK ID are used to create a new DEK
+
+  Parameters
+  -----------
+    client: mongo.ClientEncryption
+      An instantiated ClientEncryption instance that has access to the key vault
+    altName: string
+      The KeyAltName of the UUID to find
+    provider_name: string
+      The name of the key provider. "aws", "gcp", "azure", "kmip", or "local"
+    keyId: string
+      The key ID for the Customer Master Key (CMK)
+  Return
+  -----------
+    employee_key_id: UUID
+      The UUID of the DEK
+    error: error
+      Error message or None of successful
+  """
+  
   employee_key_id = client.get_key_by_alt_name(str(altName))
   if employee_key_id == None:
     try:
@@ -40,11 +80,11 @@ def get_employee_key(client, altName, provider_name, keyId):
 def main():
 
   # Obviously this should not be hardcoded
-  config_data = {
-    "DB_CONNECTION_STRING": f"mongodb://app_user:{MDB_PASSWORD}@csfle-mongodb-{PETNAME}.mdbtraining.net",
-    "DB_TIMEOUT": 5000,
-    "DB_SSL_CA": "/etc/pki/tls/certs/ca.cert"
-  }
+  connection_string = "mongodb://%s:%s@%s/?" % (
+    quote_plus(APP_USER),
+    quote_plus(MDB_PASSWORD),
+    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+  )
 
   # Declare or key vault namespce
   keyvault_db = "__encryption"
@@ -66,7 +106,7 @@ def main():
   encrypted_coll_name = "employee"
 
   # instantiate our MongoDB Client object
-  client, err = mdb_client(config_data)
+  client, err = mdb_client(connection_string)
   if err != None:
     print(err)
     sys.exit(1)
@@ -202,7 +242,7 @@ def main():
     crypt_shared_lib_path = '/lib/mongo_crypt_v1.so'
   )
 
-  secure_client, err = mdb_client(config_data, auto_encryption_opts=auto_encryption)
+  secure_client, err = mdb_client(connection_string, auto_encryption_opts=auto_encryption)
   if err != None:
     print(err)
     sys.exit(1)
