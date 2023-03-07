@@ -32,7 +32,7 @@ def mdb_client(connection_string, auto_encryption_opts=None):
   """
 
   try:
-    client = MongoClient(connection_string)
+    client = MongoClient(connection_string, auto_encryption_opts=auto_encryption_opts)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
