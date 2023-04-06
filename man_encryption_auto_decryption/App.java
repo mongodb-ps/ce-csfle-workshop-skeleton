@@ -410,10 +410,12 @@ public class App {
                 encryptedDb = secureClient.getDatabase(encryptedDbName);
                 encryptedColl = encryptedDb.getCollection(encryptedCollName);
                 
-                // Now query on the name
+                // Now query on the name - which one?
                 BsonBinary encryptedName = (BsonBinary) namePayload.get("first_name");
+                String unencryptedName = (String)((Document) payload.get("name")).get("first_name");
                 ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
                 // PUT CODE HERE TO QUERY THE NAME FIELD
+                // REMEMBER WHICH CLIENT TO USE
                 Document decryptedResult = docSubscriber.first();
                 decryptedResult = docSubscriber.first();
                 System.out.println(decryptedResult.toJson());
