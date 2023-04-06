@@ -191,7 +191,7 @@ def main():
     result = secure_client[encrypted_db_name][encrypted_coll_name].insert_one(payload)
     print(result.inserted_id)
 
-    # PUT CODE HERE TO QUERY THE SALARY FIELD
+    # WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
     decrypted_doc = 
 
     print(decrypted_doc)
