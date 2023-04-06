@@ -143,12 +143,12 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Kuber",
-    "last_name": "Engineer",
+    "first_name": "Poorna",
+    "last_name": "Muggle",
     "othernames": null,
   },
   "address": {
-    "streetAddress": "537 Bson Rd",
+    "streetAddress": "29 Bson St",
     "suburbCounty": "Mongoville",
     "zipPostcode": "7258",
     "stateProvince": "Tasmania",
@@ -402,6 +402,7 @@ public class App {
                 .kmsProviders(kmsProvider)
                 .extraOptions(extraOptions)
                 .schemaMap(schemaMap)
+                .bypassAutoEncryption(true)
                 .build();
 
             
