@@ -15,7 +15,7 @@ import (
 
 var (
 	PETNAME = 
-	MDB_PASSWORD =
+	MDB_PASSWORD = 
 )
 
 // Function to create MognoDB client instance
@@ -72,6 +72,7 @@ func main() {
 		clientEncryption *mongo.ClientEncryption
 		client           *mongo.Client
 		exitCode         = 0
+                kmipTLSConfig    *tls.Config
 		result           *mongo.InsertOneResult
 		dekFindResult    bson.M
 		dek              primitive.Binary
@@ -111,7 +112,7 @@ func main() {
 	}
 	kmsTLSOptions["kmip"] = kmipTLSConfig
 
-	clientEncryption, err = createManualEncryptionClient(client, kmsProvider, keySpace, kmipTLSConfig)
+	clientEncryption, err = createManualEncryptionClient(client, kmsProvider, keySpace, kmsTLSOptions)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1

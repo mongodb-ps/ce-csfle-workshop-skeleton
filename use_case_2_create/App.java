@@ -325,7 +325,7 @@ public class App {
         // declare our key provider attributes
         Map<String, Map<String, Object>> kmsProvider = new HashMap<String, Map<String, Object>>();
         Map<String, Object> kmipProviderInstance = new HashMap<String, Object>();
-        kmipProviderInstance.put("endpoint", "csfle-kmip-quiet-falcon.mdbtraining.net");
+        kmipProviderInstance.put("endpoint", "csfle-kmip-" + PETNAME + ".mdbtraining.net");
         kmsProvider.put(provider, kmipProviderInstance);
 
         // declare our database and collection
