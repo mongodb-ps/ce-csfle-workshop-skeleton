@@ -147,8 +147,8 @@ def main():
     ]
   }
 
-  # remove `name.otherNames` if None because wwe cannot encrypt none
-  # PUT CODE HERE TO HANDLE THAT SITUATION
+  if payload["name"]["otherNames"] is None:
+    del(payload["name"]["otherNames"])
 
   try:
     result = secure_client[encrypted_db_name][encrypted_coll_name].insert_one(payload)

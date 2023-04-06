@@ -156,7 +156,7 @@ func main() {
 	if name["otherNames"] == nil {
 		// put code here to remove this field if nil
 	} else {
-		name["otherNames"], err = // put code here to encrypt the field value
+		name["otherNames"], err = encryptManual(// put required variables here)
 		if err != nil {
 			fmt.Printf("ClientEncrypt error: %s\n", err)
 			exitCode = 1
@@ -164,14 +164,14 @@ func main() {
 		}
 	}
 
-	name["firstName"], err = // put code here to encrypt the field value
+	name["firstName"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
 		return
 	}
 
-	name["lastName"], err = // put code here to encrypt the field value
+	name["lastName"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
@@ -179,35 +179,35 @@ func main() {
 	}
 	payload["name"] = name
 
-	payload["address"], err = // put code here to encrypt the field value
+	payload["address"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
 		return
 	}
 
-	payload["dob"], err = // put code here to encrypt the field value
+	payload["dob"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
 		return
 	}
 
-	payload["phoneNumber"], err = // put code here to encrypt the field value
+	payload["phoneNumber"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
 		return
 	}
 
-	payload["salary"], err = // put code here to encrypt the field value
+	payload["salary"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
 		return
 	}
 
-	payload["taxIdentifier"], err = // put code here to encrypt the field value
+	payload["taxIdentifier"], err = encryptManual(// put required variables here)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1

@@ -214,7 +214,7 @@ def main():
     encrypted_doc = client[encrypted_db_name][encrypted_coll_name].find_one({"name.firstName": encrypted_name})
     print(encrypted_doc)
 
-    # GO TO THE traverse_bson FUNCTION
+    # GO TO THE traverse_bson FUNCTION and see how we decrypt
     decrypted_doc = traverse_bson(client_encryption, encrypted_doc)
     print(decrypted_doc)
 

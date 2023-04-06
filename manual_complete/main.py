@@ -208,7 +208,7 @@ def main():
 
   try:
 
-    encrypted_name = payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    encrypted_name = client_encryption.encrypt("Kuber", Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
     encrypted_doc = client[encrypted_db_name][encrypted_coll_name].find_one({"name.firstName": encrypted_name})
     print(encrypted_doc)
 
