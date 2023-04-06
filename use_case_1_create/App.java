@@ -359,12 +359,12 @@ public class App {
                 MongoDatabase encryptedDb = secureClient.getDatabase(encryptedDbName);
                 MongoCollection<Document> encryptedColl = encryptedDb.getCollection(encryptedCollName);
 
-                // ENCRYPT first_name and last_name here
+                // TODO - ENCRYPT first_name and last_name here
                 BsonDocument namePayload = ((Document)payload.get("name")).toBsonDocument();
 
                 for (String key: new String[] { "first_name", "last_name" }) {
                     ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
-                        encVal -> payload.put(key, encVal),
+                        encVal -> payload.put(key, encVal)
                     );
                     clientEncryption.encrypt(namePayload.get(key), optionsDetermistic).subscribe(encSet);
                 }
@@ -408,9 +408,6 @@ public class App {
                 } else {
                     System.out.println("No document found");
                 }
-
-
-
 
             }
 

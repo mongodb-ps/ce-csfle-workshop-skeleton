@@ -143,12 +143,12 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Kuber",
-    "last_name": "Engineer",
+    "first_name": "Poorna",
+    "last_name": "Muggle",
     "othernames": null,
   },
   "address": {
-    "streetAddress": "537 Bson Rd",
+    "streetAddress": "29 Bson St",
     "suburbCounty": "Mongoville",
     "zipPostcode": "7258",
     "stateProvince": "Tasmania",
@@ -402,6 +402,7 @@ public class App {
                 .kmsProviders(kmsProvider)
                 .extraOptions(extraOptions)
                 .schemaMap(schemaMap)
+                .bypassAutoEncryption(true)
                 .build();
 
             
@@ -410,11 +411,11 @@ public class App {
                 encryptedDb = secureClient.getDatabase(encryptedDbName);
                 encryptedColl = encryptedDb.getCollection(encryptedCollName);
                 
-                // Now query on the name - which one?
+                // Now query on the name - WHICH ONE?
                 BsonBinary encryptedName = (BsonBinary) namePayload.get("first_name");
                 String unencryptedName = (String)((Document) payload.get("name")).get("first_name");
                 ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
-                // PUT CODE HERE TO QUERY THE NAME FIELD
+                // TODO - PUT CODE HERE TO QUERY THE NAME FIELD
                 // REMEMBER WHICH CLIENT TO USE
                 Document decryptedResult = docSubscriber.first();
                 decryptedResult = docSubscriber.first();

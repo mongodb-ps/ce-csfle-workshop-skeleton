@@ -3,7 +3,6 @@
 import static com.mongodb.client.model.Filters.eq;
 
 import com.mongodb.AutoEncryptionSettings;
-import com.mongodb.ClientEncryptionSettings;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoNamespace;
@@ -15,15 +14,10 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.result.InsertOneResult;
-import com.mongodb.reactivestreams.client.vault.ClientEncryption;
-import com.mongodb.reactivestreams.client.vault.ClientEncryptions;
 
-import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentReader;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.DecoderContext;
@@ -39,7 +33,6 @@ import com.mongodb.MongoInterruptedException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.MongoWriteException;
 
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -102,20 +95,6 @@ public class App {
 
     public MongoClient getMdbClient(String connectionString, int dbTimeout, boolean useSSL) {
         return this.getMdbClient(connectionString, dbTimeout, useSSL, null);
-    }
-
-    public ClientEncryption getClientEncryption(String connectionString, MongoNamespace keyvaultNamespace, Map<String, Map<String, Object>> kmsProviders) {
-        ClientEncryptionSettings encryptionSettings = ClientEncryptionSettings.builder()
-            .keyVaultMongoClientSettings(MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(connectionString))
-                .uuidRepresentation(UuidRepresentation.STANDARD)
-                .build())
-            .keyVaultNamespace(keyvaultNamespace.getFullName())
-            .kmsProviders(kmsProviders)    
-            .build();
-        
-        ClientEncryption clientEncryption = ClientEncryptions.create(encryptionSettings);
-        return clientEncryption;
     }
 
     public UUID getDekUUID(MongoClient client, MongoNamespace keyvaultNamespace) {
@@ -190,68 +169,6 @@ public class App {
         return numEncryptedFields;
     }
 
-    public Document encryptPayload(ClientEncryption clientEncryption, Map<String, String[][]> schemaMap, Document payload, UUID dataKey1) 
-            throws InterruptedException {
-        BsonDocument encryptedPayload = payload.toBsonDocument();
-        // latch to wait for all fields to by en/decrypted
-        CountDownLatch allFieldsLatch = new CountDownLatch(countFields(schemaMap));
-
-        for (String algorithm : schemaMap.keySet()) {
-            EncryptOptions options = new EncryptOptions(algorithm).keyId(new BsonBinary(dataKey1));
-            String[][] deepKeyArray = schemaMap.get(algorithm);
-            for (String[] deepKeys : deepKeyArray) {
-                try {
-                    BsonValue val = nestedGet(encryptedPayload, deepKeys);
-                    if (val != null) {
-                        ObservableSubscriber<BsonValue> valueSetter = new ConsumerSubscriber<BsonValue>(
-                            encVal -> nestedSet(encryptedPayload, deepKeys, encVal),
-                            allFieldsLatch
-                        );
-                        encryptData(val, clientEncryption, options).subscribe(valueSetter);
-                        
-                    } else {
-                        allFieldsLatch.countDown();
-                        nestedRemove(encryptedPayload, deepKeys);
-                    }
-                } catch (Exception bve) {
-                    System.err.println("Error in encryptPayload on [" + String.join(", ", deepKeys) + "]");
-                    bve.printStackTrace();
-                }
-            }
-        }
-        // Make sure all encryptions have completed before returning the doc
-        allFieldsLatch.await(60, TimeUnit.SECONDS);
-        return toDoc(encryptedPayload);
-    }
-
-    public BsonValue nestedGet(BsonDocument doc, String[] deepKeys) {
-        int idx;
-        for (idx=0; idx < deepKeys.length - 1; idx++) {
-            doc = (BsonDocument) doc.get(deepKeys[idx]);
-        }
-        return doc.get(deepKeys[idx]);
-    }
-
-    public void nestedSet(BsonDocument doc, String[] deepKeys, BsonValue val) {
-        int idx;
-        for (idx=0; idx < deepKeys.length - 1; idx++) {
-            doc = (BsonDocument) doc.get(deepKeys[idx]);
-        }
-        doc.put(deepKeys[idx], val);
-    }
-
-    public void nestedRemove(BsonDocument doc, String[] deepKeys) {
-        int idx;
-        for (idx=0; idx < deepKeys.length - 1; idx++) {
-            doc = (BsonDocument) doc.get(deepKeys[idx]);
-        }
-        doc.remove(deepKeys[idx]);
-    }
-
-    public Publisher<BsonBinary> encryptData(BsonValue data,  ClientEncryption clientEncryption, EncryptOptions options) {
-        return clientEncryption.encrypt(data, options);
-    }
-
     public BsonDocument getSchemaDocument(UUID dekUuid) {
         String schemaJson = """
 {
@@ -321,7 +238,6 @@ public class App {
         BsonDocument schemaBsonDoc = BsonDocument.parse(schemaJson);
         return schemaBsonDoc;
     }
-
 
     public static void main( String[] args )
     {
@@ -420,10 +336,10 @@ public class App {
                 }
 
                 ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
-                // PUT CODE HERE TO QUERY THE SALARY FIELD
+                // TODO - PUT CODE HERE TO QUERY THE SALARY FIELD
                 Document decryptedResult = docSubscriber.first();
 
-                // PUT CODE HERE TO PERFORM A RANGE QUERY on "name.first_name"
+                // TODO - PUT CODE HERE TO PERFORM A RANGE QUERY on "name.first_name"
                 decryptedResult = docSubscriber.first();
 
             }
