@@ -120,6 +120,7 @@ func main() {
 		findResult			 bson.M
 		outputData			 bson.M
 		dek              primitive.Binary
+		encryptedName 	 primitive.Binary
 		kmipTLSConfig    *tls.Config
 		err							 error
 	)
@@ -285,6 +286,8 @@ func main() {
 	fmt.Printf("%+v\n", findResult)
 
 	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
+	encryptedName, err = 
+	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
 	outputData, err = traverseBson(clientEncryption, findResult)
 	if err != nil {
 		fmt.Printf("Encryption error: %s\n", err)

@@ -156,7 +156,25 @@ func main(){
 	collection := "employee"
 
 	schemaMap := bson.M{
-		// PUT YOUR SCHEMA MAP CODE HERE
+		db + "." + collection: bson.M{
+			"bsonType": "object",
+			"encryptMetadata": bson.M{
+				"keyId": bson.A{
+					dek,
+				},
+				"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+			},
+			"properties": bson.M{
+				"name": bson.M{
+					"bsonType": "object",
+					"properties": bson.M{
+						"firstname": bson.M{
+							"encrypt": bson.M{
+								"bsonType":  "string",
+								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+							},
+						},
+		// PUT THE REST OF YOUR SCHEMA MAP CODE HERE
 	}
 
 	// Auto Encryption Client

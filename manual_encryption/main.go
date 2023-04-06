@@ -72,7 +72,7 @@ func main() {
 		clientEncryption *mongo.ClientEncryption
 		client           *mongo.Client
 		exitCode         = 0
-                kmipTLSConfig    *tls.Config
+    kmipTLSConfig    *tls.Config
 		result           *mongo.InsertOneResult
 		dekFindResult    bson.M
 		dek              primitive.Binary
@@ -149,8 +149,70 @@ func main() {
 	}
 	dek = dekFindResult["_id"].(primitive.Binary)
 
-	//  WRITE CODE HERE TO ENCRYPT THE APPROPRIATE FIELDS with the encryptManual() function above
+	// WRITE CODE HERE to call the the encryptManual() function that is written above
+	// YOU WILL NEED TO EDIT THE encryptManual() function to perform the encryption
 	// Don't forget to handle to event of name.otherNames being null
+	name := payload["name"].(bson.M)
+	if name["otherNames"] == nil {
+		// put code here to remove this field if nil
+	} else {
+		name["otherNames"], err = // put code here to encrypt the field value
+		if err != nil {
+			fmt.Printf("ClientEncrypt error: %s\n", err)
+			exitCode = 1
+			return
+		}
+	}
+
+	name["firstName"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	name["lastName"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+	payload["name"] = name
+
+	payload["address"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	payload["dob"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	payload["phoneNumber"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	payload["salary"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+
+	payload["taxIdentifier"], err = // put code here to encrypt the field value
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
 
 	coll = client.Database("companyData").Collection("employee")
 

@@ -42,10 +42,10 @@ def mdb_client(connection_string, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@%s/?" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
     quote_plus(MDB_PASSWORD),
-    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+    quote_plus(CA_PATH)
   )
 
   # Declare or key vault namespce
@@ -121,12 +121,31 @@ def main():
     # WRITE CODE HERE TO ENCRYPT THE APPROPRIATE FIELDS
     # Don't forget to handle to event of name.otherNames being null
 
+    # Do deterministic fields
+    payload["name"]["firstName"] = # Put code here to encrypt the data
+    payload["name"]["lastName"] = # Put code here to encrypt the data
+
+    # Do random fields
+    if payload["name"]["otherNames"] is None:
+      # put code here to delete this field if None
+    else:
+      payload["name"]["otherNames"] = # Put code here to encrypt the data
+    payload["address"] = # Put code here to encrypt the data
+    payload["dob"] = # Put code here to encrypt the data
+    payload["phoneNumber"] = # Put code here to encrypt the data
+    payload["salary"] = # Put code here to encrypt the data
+    payload["taxIdentifier"] = # Put code here to encrypt the data
+
 
     # Test if the data is encrypted
     for data in [ payload["name"]["firstName"], payload["name"]["lastName"], payload["address"], payload["dob"], payload["phoneNumber"], payload["salary"], payload["taxIdentifier"]]:
       if type(data) is not Binary and data.subtype != 6:
         print("Data is not encrypted")
-        sys.exit()
+        sys.exit(-1)
+
+    if "otherNames" in payload["name"] and payload["name"]["otherNames"] is None:
+      print("None cannot be encrypted")
+      sys.exit(-1)
 
   except EncryptionError as e:
     print(f"Encryption error: {e}")
