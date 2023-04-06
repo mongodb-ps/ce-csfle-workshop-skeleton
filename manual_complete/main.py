@@ -48,7 +48,7 @@ def decrypt_data(client_encryption, data):
   Parameters
   -----------
     client_encryption: mongo.ClientEncryption
-      Instantiated mongo.ClientEncryption instance
+      Instantiated mongo.ClientEncryption instancesection
     data: value
       A value to be tested, and decrypted if required
   Return
@@ -96,10 +96,10 @@ def traverse_bson(client_encryption, data):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@%s/?" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
     quote_plus(MDB_PASSWORD),
-    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+    quote_plus(CA_PATH)
   )
 
   # Declare or key vault namespce
@@ -193,6 +193,10 @@ def main():
         print("Data is not encrypted")
         sys.exit()
 
+    if "otherNames" in payload["name"] and payload["name"]["otherNames"] is None:
+      print("None cannot be encrypted")
+      sys.exit(-1)
+
     result = client[encrypted_db_name][encrypted_coll_name].insert_one(payload)
 
     print(result.inserted_id)
@@ -204,7 +208,7 @@ def main():
 
   try:
 
-    encrypted_name = payload["name"]["firstName"] = client_encryption.encrypt(payload["name"]["firstName"], Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
+    encrypted_name = client_encryption.encrypt("Kuber", Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, data_key_id_1)
     encrypted_doc = client[encrypted_db_name][encrypted_coll_name].find_one({"name.firstName": encrypted_name})
     print(encrypted_doc)
 

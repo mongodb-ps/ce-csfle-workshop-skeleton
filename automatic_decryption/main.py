@@ -42,10 +42,10 @@ def mdb_client(connection_string, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@%s/?" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
     quote_plus(MDB_PASSWORD),
-    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+    quote_plus(CA_PATH)
   )
 
   # Declare or key vault namespce
@@ -191,7 +191,7 @@ def main():
     result = secure_client[encrypted_db_name][encrypted_coll_name].insert_one(payload)
     print(result.inserted_id)
 
-    # PUT CODE HERE TO QUERY THE SALARY FIELD
+    # WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
     decrypted_doc = 
 
     print(decrypted_doc)

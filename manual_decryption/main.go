@@ -120,6 +120,7 @@ func main() {
 		findResult			 bson.M
 		outputData			 bson.M
 		dek              primitive.Binary
+		encryptedName 	 primitive.Binary
 		kmipTLSConfig    *tls.Config
 		err							 error
 	)
@@ -271,7 +272,13 @@ func main() {
 	fmt.Print(result.InsertedID)
 
 	// WRITE CODE AS REQUIRED TO QUERY FOR THE name.firstName
-	err = coll.FindOne(context.TODO(), bson.M{}).Decode(&findResult)
+	encryptedName, err = encryptManual(// put required variables here)
+	if err != nil {
+		fmt.Printf("ClientEncrypt error: %s\n", err)
+		exitCode = 1
+		return
+	}
+	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
 	if err != nil {
 		fmt.Printf("MongoDB find error: %s\n", err)
 		exitCode = 1
@@ -284,6 +291,9 @@ func main() {
 	}
 	fmt.Printf("%+v\n", findResult)
 
+	// WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
+	encryptedName = 
+	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
 	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
 	outputData, err = traverseBson(clientEncryption, findResult)
 	if err != nil {
