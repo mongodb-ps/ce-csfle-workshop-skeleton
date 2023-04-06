@@ -30,8 +30,8 @@ func createClient(c string) (*mongo.Client, error) {
 }
 
 // Function to create the MognoDB ClientEncryption instance
-func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string) (*mongo.ClientEncryption, error) {
-	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp)
+func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string, tlsOps map[string]*tls.Config) (*mongo.ClientEncryption, error) {
+	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp).SetTLSConfig(tlsOps)
 	client, err := mongo.NewClientEncryption(c, o)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,21 @@ func main() {
 
 	coll := client.Database("__encryption").Collection("__keyVault")
 
-	clientEncryption, err = createManualEncryptionClient(client, kmsProvider, keySpace)
+	// Set the KMIP TLS options
+	kmsTLSOptions := make(map[string]*tls.Config)
+	tlsOptions := map[string]interface{}{
+		"tlsCAFile": "/etc/pki/tls/certs/ca.cert",
+		"tlsCertificateKeyFile": "/home/ec2-user/server.pem",
+	}
+	kmipTLSConfig, err = options.BuildTLSConfig(tlsOptions)
+	if err != nil {
+		fmt.Printf("Cannot create KMS TLS Config: %s\n", err)
+		exitCode = 1
+		return
+	}
+	kmsTLSOptions["kmip"] = kmipTLSConfig
+
+	clientEncryption, err = createManualEncryptionClient(client, kmsProvider, keySpace, kmipTLSConfig)
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1

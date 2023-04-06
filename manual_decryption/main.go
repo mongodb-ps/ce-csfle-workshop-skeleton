@@ -32,7 +32,7 @@ func createClient(c string) (*mongo.Client, error) {
 
 // Function to create the MognoDB ClientEncryption instance
 func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string) (*mongo.ClientEncryption, error) {
-	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp)
+	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp).SetTLSConfig(tlsOps)
 	client, err := mongo.NewClientEncryption(c, o)
 	if err != nil {
 		return nil, err
@@ -63,6 +63,7 @@ func encryptManual(ce *mongo.ClientEncryption, dek primitive.Binary, alg string,
 	return out, nil
 }
 
+// Function to decrypt
 func decryptManual(c *mongo.ClientEncryption, d primitive.Binary)(bson.RawValue, error) {
 	out, err := // PERFORM THE DECRYPTION HERE
 	if err != nil {
