@@ -76,4 +76,6 @@ db.getSiblingDB('admin').createUser({
  "roles": ["cryptoClient", {'role': "readWrite", 'db': 'companyData'} ]
 });
 
+db.getSiblingDB("companyData").createCollection("employee");
+
 exit;
