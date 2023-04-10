@@ -1,4 +1,4 @@
-mongosh "mongodb://mongoadmin:passwordone@csfle-mongodb-<PETNAME>.mdbtraining.net:27017/?replicaSet=rs0" --tls --tlsCAFile /etc/pki/tls/certs/ca.cert 
+// run via: mongosh "mongodb://mongoadmin:passwordone@csfle-mongodb-<PETNAME>.mdbtraining.net:27017/?replicaSet=rs0" --tls --tlsCAFile /etc/pki/tls/certs/ca.cert --eval 'load("second_day.js")'
 
 // Create Index
 db.getSiblingDB("__encryption").getCollection("__keyVault").createIndex(
@@ -14,6 +14,9 @@ db.getSiblingDB("__encryption").getCollection("__keyVault").createIndex(
     }
   }
 );
+
+
+
 
 // Create DEK
 const provider = {
@@ -49,12 +52,12 @@ keyVault.createKey(
 );
 
 // Retrieve all the keys
-keyVault.getKeys()
+keyVault.getKeys();
 
 
 // Create User and Role
-use admin;
-db.createRole({
+//use admin;
+db.getSiblingDB('admin').createRole({
  "role": "cryptoClient",
  "privileges": [
    {
@@ -67,60 +70,10 @@ db.createRole({
   ],
   "roles": [ ]
 });
-use admin;
-db.createUser({
+db.getSiblingDB('admin').createUser({
  "user": "app_user",
  "pwd": "password123",
  "roles": ["cryptoClient", {'role': "readWrite", 'db': 'companyData'} ]
 });
 
-// Modify collection
-use companyData;
-db.runCommand({
-  collMod: "employee",
-  validator: {
-    $jsonSchema: <SCHEMA_MAP_GOES_HERE>
-  }
-}
-)
-
-
-// CMK Rotation
-// start mongosh with `mongosh --nodb`
-const provider = {
- "kmip": { // <-- KMS provider name
-    "endpoint": "csfle-kmip-<PETNAME>.mdbtraining.net"
- }
-}
-
-const tlsOptions = {
-  kmip: {
-    tlsCAFile: "/etc/pki/tls/certs/ca.cert",
-    tlsCertificateKeyFile: "/home/ec2-user/server.pem"
-  }
-}
-
-const autoEncryptionOpts = {
- kmsProviders : provider,
- schemaMap: {}, //no schema map
- keyVaultNamespace: "__encryption.__keyVault",
- tlsOptions: tlsOptions
-}
-
-encryptedClient = Mongo("mongodb://mongoadmin:passwordone@csfle-mongodb-<PETNAME>.mdbtraining.net:27017/?replicaSet=rs0&tls=true&tlsCAFile=%2Fetc%2Fpki%2Ftls%2Fcerts%2Fca.cert", autoEncryptionOpts)
-
-keyVault = encryptedClient.getKeyVault()
-
-keyVault.rewrapManyDataKey(
- {
-    masterKey: { "key": "<UUID_OF_CMK>"} // <-- example filter
- },
- {
-    "kmip", // <-- new key provider name
-    "masterKey": { // <-- CMK info (specific to KMIP in this case)
-      "keyId": "<ID_OF_KEY>",
-      "endpoint": "<KMIP_ENDPOINT>"
-    }
- }
-)
-
+exit;
