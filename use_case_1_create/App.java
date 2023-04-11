@@ -147,9 +147,9 @@ public class App {
 {
   "_id": "%s",
   "name": {
-    "first_name": "%s",
-    "last_name": "%s",
-    "othernames": null,
+    "firstName": "%s",
+    "lastName": "%s",
+    "otherNames": null,
   },
   "address": {
     "streetAddress": "537 White Hills Rd",
@@ -160,16 +160,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "+61 400 000 111",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary":  99000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -195,7 +186,7 @@ public class App {
             "bsonType": "object",
             "properties" : {
 
-                "othernames" : {
+                "otherNames" : {
                     "encrypt" : {
                         "bsonType" : "string",
                     }
@@ -203,18 +194,8 @@ public class App {
             }
         },
         "address" : {
-            "bsonType" : "object",
-            "properties" : {
-                "streetAddress" : {
-                "encrypt" : {
-                    "bsonType" : "string"
-                }
-                },
-                "suburbCounty" : {
-                "encrypt" : {
-                    "bsonType" : "string"
-                }
-                }
+            "encrypt" : {
+                "bsonType" : "object",
             }
         },
         "phoneNumber" : {
@@ -224,7 +205,7 @@ public class App {
         },
         "salary" : {
             "encrypt" : {
-                "bsonType" : "object"
+                "bsonType" : "double"
             }
         },
         "taxIdentifier" : {
@@ -359,19 +340,19 @@ public class App {
                 MongoDatabase encryptedDb = secureClient.getDatabase(encryptedDbName);
                 MongoCollection<Document> encryptedColl = encryptedDb.getCollection(encryptedCollName);
 
-                // TODO - ENCRYPT first_name and last_name here
+                // TODO - ENCRYPT firstName and lastName here
                 BsonDocument namePayload = ((Document)payload.get("name")).toBsonDocument();
 
-                for (String key: new String[] { "first_name", "last_name" }) {
+                for (String key: new String[] { "firstName", "lastName" }) {
                     ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
                         encVal -> payload.put(key, encVal)
                     );
                     clientEncryption.encrypt(namePayload.get(key), optionsDetermistic).subscribe(encSet);
                 }
 
-                // remove `name.othernames` if null because wwe cannot encrypt null
-                if (payload.get("name", Document.class).get("othernames") == null) {
-                    payload.get("name", Document.class).remove("othernames");
+                // remove `name.otherNames` if null because wwe cannot encrypt null
+                if (payload.get("name", Document.class).get("otherNames") == null) {
+                    payload.get("name", Document.class).remove("otherNames");
                 }
 
                 try {
@@ -396,11 +377,11 @@ public class App {
                     System.exit(1);
                 }
 
-                Object firstname = payload.get("name", Document.class).get("first_name");
-                Object lastname = payload.get("name", Document.class).get("last_name");
+                Object firstname = payload.get("name", Document.class).get("firstName");
+                Object lastname = payload.get("name", Document.class).get("lastName");
 
                 ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
-                encryptedColl.find(and(eq("name.first_name", firstname), eq("name.last_name", lastname)))
+                encryptedColl.find(and(eq("name.firstName", firstname), eq("name.lastName", lastname)))
                     .subscribe(docSubscriber);
                 Document decryptedResult = docSubscriber.first();
                 if (decryptedResult != null) {
