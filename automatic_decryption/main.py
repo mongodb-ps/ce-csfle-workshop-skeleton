@@ -44,8 +44,8 @@ def main():
   # Obviously this should not be hardcoded
   connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
-    PETNAME,
     quote_plus(MDB_PASSWORD),
+    PETNAME,
     quote_plus(CA_PATH)
   )
 
@@ -70,7 +70,7 @@ def main():
 
   # instantiate our MongoDB Client object
   client, err = mdb_client(connection_string)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -181,7 +181,7 @@ def main():
   )
 
   secure_client, err = mdb_client(connection_string, auto_encryption_opts=auto_encryption)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -193,18 +193,20 @@ def main():
     print(result.inserted_id)
 
     # WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
-    decrypted_doc = # use a find_one
+    decrypted_docs = # use a find_one
 
-    print(decrypted_doc)
+    for doc in decrypted_docs:
+      print(doc)
   except EncryptionError as e:
     print(f"Encryption error: {e}")
 
   try:
 
     # PUT CODE HERE TO PERFORM A RANGE QUERY ON THE `name.firstName` field
-    decrypted_doc = # use a find_one
+    decrypted_docs = # use a find_one
 
-    print(decrypted_doc)
+    for doc in decrypted_docs:
+      print(doc)
   except EncryptionError as e:
     print(f"Encryption error: {e}")
 

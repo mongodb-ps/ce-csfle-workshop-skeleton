@@ -37,7 +37,7 @@ def mdb_client(connection_string, auto_encryption_opts=None):
   """
 
   try:
-    client = MongoClient(connection_string)
+    client = MongoClient(connection_string, auto_encryption_opts=auto_encryption_opts)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
@@ -70,7 +70,7 @@ def get_employee_key(client, altName, provider_name, keyId):
   employee_key_id = client.get_key_by_alt_name(str(altName))
   if employee_key_id == None:
     try:
-      master_key = {"keyId": keyId, f"endpoint": "csfle-kmip-{PETNAME}.mdbtraining.net"}
+      master_key = {"keyId": keyId, "endpoint": f"csfle-kmip-{PETNAME}.mdbtraining.net"}
       employee_key_id = client.create_data_key(kms_provider=provider_name, master_key=master_key, key_alt_names=[str(altName)])
     except EncryptionError as e:
       return None, f"ClientEncryption error: {e}"
@@ -83,8 +83,8 @@ def main():
   # Obviously this should not be hardcoded
   connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
-    PETNAME,
     quote_plus(MDB_PASSWORD),
+    PETNAME,
     quote_plus(CA_PATH)
   )
 
@@ -109,7 +109,7 @@ def main():
 
   # instantiate our MongoDB Client object
   client, err = mdb_client(connection_string)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -132,13 +132,13 @@ def main():
   lastname = names.get_last_name()
 
   # PUT CODE HERE TO RETRIEVE OUR COMMON (our first) DEK:
-  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 0, "keyAltNames": 1})["_id"]
-  if data_key_id_1 != None:
-    print(err)
+  data_key_id_1 = client[keyvault_db][keyvault_coll].find_one({"keyAltNames": "dataKey1"},{"_id": 1})["_id"]
+  if data_key_id_1 is None:
+    print("Common DEK missing")
     sys.exit(1)
 
   # retrieve the DEK UUID
-  _, err = get_employee_key(client_encryption, employee_id, provider, '1')
+  employeeDEK, err = get_employee_key(client_encryption, employee_id, provider, '1')
   if err is not None:
     print(err)
     sys.exit(1)
@@ -245,7 +245,7 @@ def main():
   )
 
   secure_client, err = mdb_client(connection_string, auto_encryption_opts=auto_encryption)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
   encrypted_db = secure_client[encrypted_db_name]
