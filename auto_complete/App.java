@@ -140,9 +140,9 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Will",
-    "last_name": "T",
-    "othernames": null,
+    "firstName": "Will",
+    "lastName": "T",
+    "otherNames": null,
   },
   "address": {
     "streetAddress": "537 White Hills Rd",
@@ -153,16 +153,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "+61 400 000 111",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 89000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -266,19 +257,19 @@ public class App {
         "name" : {
     "bsonType": "object",
         "properties" : {
-        "first_name" : {
+        "firstName" : {
             "encrypt" : {
             "bsonType" : "string",
             "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
         }
         },
-        "last_name" : {
+        "lastName" : {
             "encrypt" : {
             "bsonType" : "string",
             "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
         }
         },
-        "othernames" : {
+        "otherNames" : {
             "encrypt" : {
             "bsonType" : "string",
         }
@@ -286,19 +277,14 @@ public class App {
         }
     },
         "address" : {
-        "bsonType" : "object",
-        "properties" : {
-            "streetAddress" : {
             "encrypt" : {
-                "bsonType" : "string"
+                "bsonType" : "object"
             }
-            },
-            "suburbCounty" : {
+        },
+        "dob" : {
             "encrypt" : {
-                "bsonType" : "string"
+                "bsonType" : "date"
             }
-            }
-        }
         },
         "phoneNumber" : {
         "encrypt" : {
@@ -307,7 +293,7 @@ public class App {
         },
         "salary" : {
         "encrypt" : {
-            "bsonType" : "object"
+            "bsonType" : "double"
         }
         },
         "taxIdentifier" : {
@@ -387,8 +373,8 @@ public class App {
                 .schemaMap(schemaMap)
                 .build();
 
-            if (payload.get("name", Document.class).get("othernames") == null) {
-                payload.get("name", Document.class).remove("othernames");
+            if (payload.get("name", Document.class).get("otherNames") == null) {
+                payload.get("name", Document.class).remove("otherNames");
             }
 
             try (MongoClient secureClient = app.getMdbClient(connectionString, 5000, false, autoEncryptionSettings)) {

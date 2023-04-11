@@ -18,6 +18,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.vault.DataKeyOptions;
+import com.mongodb.client.model.vault.EncryptOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.reactivestreams.client.vault.ClientEncryption;
@@ -27,6 +28,7 @@ import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentReader;
 import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.DecoderContext;
@@ -198,6 +200,11 @@ public class App {
                 "bsonType" : "object",
             }
         },
+        "dob" : {
+            "encrypt" : {
+                "bsonType" : "date"
+            }
+        },
         "phoneNumber" : {
             "encrypt" : {
                 "bsonType" : "string"
@@ -340,15 +347,18 @@ public class App {
                 MongoDatabase encryptedDb = secureClient.getDatabase(encryptedDbName);
                 MongoCollection<Document> encryptedColl = encryptedDb.getCollection(encryptedCollName);
 
-                // TODO - ENCRYPT firstName and lastName here
+                // TODO - ENCRYPT firstName and lastName here; optionsDeterministic!?
                 BsonDocument namePayload = ((Document)payload.get("name")).toBsonDocument();
 
                 for (String key: new String[] { "firstName", "lastName" }) {
                     ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
-                        encVal -> payload.put(key, encVal)
+                        encVal -> namePayload.put(key, encVal)
                     );
                     clientEncryption.encrypt(namePayload.get(key), optionsDetermistic).subscribe(encSet);
+                    encSet.await();
                 }
+
+                payload.put("name", toDoc(namePayload));
 
                 // remove `name.otherNames` if null because wwe cannot encrypt null
                 if (payload.get("name", Document.class).get("otherNames") == null) {
@@ -367,7 +377,7 @@ public class App {
                         System.err.println("Duplicate");
                         System.out.println(payload.get("_id"));
                     } else {
-                        System.err.println("Error on write!");
+                        System.err.println("Mongo write exception!");
                         mwe.printStackTrace();
                         System.exit(1);
                     }
