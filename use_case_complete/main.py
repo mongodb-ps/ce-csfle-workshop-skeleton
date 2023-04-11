@@ -81,10 +81,11 @@ def get_employee_key(client, altName, provider_name, keyId):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@%s/?" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
+    PETNAME,
     quote_plus(MDB_PASSWORD),
-    quote_plus(f"csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile={CA_PATH}")
+    quote_plus(CA_PATH)
   )
 
   # Declare or key vault namespce
