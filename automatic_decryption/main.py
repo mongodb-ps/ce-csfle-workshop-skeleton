@@ -42,8 +42,9 @@ def mdb_client(connection_string, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
+    PETNAME,
     quote_plus(MDB_PASSWORD),
     quote_plus(CA_PATH)
   )
@@ -109,7 +110,7 @@ def main():
     "companyData.employee": {
       "bsonType": "object",
       "encryptMetadata": {
-        "keyId": data_key_id_1,
+        "keyId": [data_key_id_1],
         "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
       },
       "properties": {
@@ -192,7 +193,7 @@ def main():
     print(result.inserted_id)
 
     # WRITE YOUR QUERY HERE FOR AUTODECRYPTION. REMEMBER WHICH CLIENT TO USE!
-    decrypted_doc = 
+    decrypted_doc = # use a find_one
 
     print(decrypted_doc)
   except EncryptionError as e:
@@ -201,7 +202,7 @@ def main():
   try:
 
     # PUT CODE HERE TO PERFORM A RANGE QUERY ON THE `name.firstName` field
-    decrypted_doc = 
+    decrypted_doc = # use a find_one
 
     print(decrypted_doc)
   except EncryptionError as e:
