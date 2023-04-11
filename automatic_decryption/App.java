@@ -1,6 +1,7 @@
 //package manual_complete;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gt;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.ConnectionString;
@@ -119,9 +120,9 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Will",
-    "last_name": "T",
-    "othernames": null,
+    "firstName": "Will",
+    "lastName": "T",
+    "otherNames": null,
   },
   "address": {
     "streetAddress": "537 White Hills Rd",
@@ -132,16 +133,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "+61 400 000 111",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 99000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -183,19 +175,19 @@ public class App {
         "name" : {
     "bsonType": "object",
         "properties" : {
-        "first_name" : {
+        "firstName" : {
             "encrypt" : {
             "bsonType" : "string",
             "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
         }
         },
-        "last_name" : {
+        "lastName" : {
             "encrypt" : {
             "bsonType" : "string",
             "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
         }
         },
-        "othernames" : {
+        "otherNames" : {
             "encrypt" : {
             "bsonType" : "string",
         }
@@ -203,28 +195,23 @@ public class App {
         }
     },
         "address" : {
-        "bsonType" : "object",
-        "properties" : {
-            "streetAddress" : {
-            "encrypt" : {
-                "bsonType" : "string"
-            }
+            "encrypt": {
+                "bsonType" : "object"
             },
-            "suburbCounty" : {
-            "encrypt" : {
-                "bsonType" : "string"
-            }
-            }
-        }
         },
         "phoneNumber" : {
         "encrypt" : {
             "bsonType" : "string"
         }
         },
+        "dob" : {
+        "encrypt" : {
+            "bsonType" : "date"
+        }
+        },
         "salary" : {
         "encrypt" : {
-            "bsonType" : "object"
+            "bsonType" : "double"
         }
         },
         "taxIdentifier" : {

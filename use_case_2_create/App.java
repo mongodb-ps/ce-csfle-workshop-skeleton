@@ -154,9 +154,9 @@ public class App {
 {
   "_id": "%s",
   "name": {
-    "first_name": "%s",
-    "last_name": "%s",
-    "othernames": null,
+    "firstName": "%s",
+    "lastName": "%s",
+    "otherNames": null,
   },
   "address": {
     "streetAddress": "537 White Hills Rd",
@@ -167,16 +167,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "+61 400 000 111",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 99000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -200,21 +191,21 @@ public class App {
         "name" : {
             "bsonType": "object",
             "properties" : {
-                "first_name" : {
+                "firstName" : {
                     "encrypt" : {
                         "keyId" : // PUT COMMON KEY UUID HERE,
                         "bsonType" : "string",
                         "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
                     }
                 },
-                "last_name" : {
+                "lastName" : {
                     "encrypt" : {
                         "keyId" : PUT COMMONT KEY UUID HERE,
                         "bsonType" : "string",
                         "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
                 }
                 },
-                "othernames" : {
+                "otherNames" : {
                     "encrypt" : {
                         "bsonType" : "string",
                     }
@@ -222,18 +213,13 @@ public class App {
             }
         },
         "address" : {
-            "bsonType" : "object",
-            "properties" : {
-                "streetAddress" : {
-                "encrypt" : {
-                    "bsonType" : "string"
-                }
-                },
-                "suburbCounty" : {
-                "encrypt" : {
-                    "bsonType" : "string"
-                }
-                }
+            "encrypt": {
+                "bsonType" : "object",
+            }
+        },
+        "dob" : {
+            "encrypt" : {
+                "bsonType" : "date"
             }
         },
         "phoneNumber" : {
@@ -243,7 +229,7 @@ public class App {
         },
         "salary" : {
             "encrypt" : {
-                "bsonType" : "object"
+                "bsonType" : "double"
             }
         },
         "taxIdentifier" : {
@@ -253,7 +239,7 @@ public class App {
         }
     }
 }
-        """.formatted(// PUT COMMON KEY UUID HERE);
+        """.formatted("???");// PUT COMMON KEY UUID HERE)
         BsonDocument schemaBsonDoc = BsonDocument.parse(schemaJson);
         return schemaBsonDoc;
     }
@@ -385,9 +371,9 @@ public class App {
                 MongoDatabase encryptedDb = secureClient.getDatabase(encryptedDbName);
                 MongoCollection<Document> encryptedColl = encryptedDb.getCollection(encryptedCollName);
 
-                // remove `name.othernames` if null because wwe cannot encrypt null
-                if (payload.get("name", Document.class).get("othernames") == null) {
-                    payload.get("name", Document.class).remove("othernames");
+                // remove `name.otherNames` if null because wwe cannot encrypt null
+                if (payload.get("name", Document.class).get("otherNames") == null) {
+                    payload.get("name", Document.class).remove("otherNames");
                 }
 
                 try {
@@ -412,11 +398,11 @@ public class App {
                     System.exit(1);
                 }
 
-                String firstname = payload.get("name", Document.class).getString("first_name");
-                String lastname = payload.get("name", Document.class).getString("last_name");
+                String firstname = payload.get("name", Document.class).getString("firstName");
+                String lastname = payload.get("name", Document.class).getString("lastName");
 
                 ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
-                encryptedColl.find(and(eq("name.first_name", firstname), eq("name.last_name", lastname)))
+                encryptedColl.find(and(eq("name.firstName", firstname), eq("name.lastName", lastname)))
                     .subscribe(docSubscriber);
                 Document decryptedResult = docSubscriber.first();
                 if (decryptedResult != null) {
@@ -424,10 +410,6 @@ public class App {
                 } else {
                     System.out.println("No document found");
                 }
-
-
-
-
             }
 
         } catch (Exception bige) {
