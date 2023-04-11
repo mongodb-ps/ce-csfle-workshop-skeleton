@@ -84,6 +84,19 @@ db.runCommand({
 }
 )
 
+// Modify role
+use admin;
+db.grantPrivilegesToRole(
+  "cryptoClient",
+  [
+    {
+      "resource": {"db": "__encryption", "collection": "__keyVault"},
+      "actions": [ "find", "insert", "remove" ]
+    }
+  ]
+)
+
+
 
 // CMK Rotation
 // start mongosh with `mongosh --nodb`
@@ -113,10 +126,10 @@ keyVault = encryptedClient.getKeyVault()
 
 keyVault.rewrapManyDataKey(
  {
-    masterKey: { "key": "<UUID_OF_CMK>"} // <-- example filter
+    "masterKey.keyId": "<ID_OF_CMK>"} // <-- example filter
  },
  {
-    "kmip", // <-- new key provider name
+    "provider": "kmip", // <-- new key provider name
     "masterKey": { // <-- CMK info (specific to KMIP in this case)
       "keyId": "<ID_OF_KEY>",
       "endpoint": "<KMIP_ENDPOINT>"

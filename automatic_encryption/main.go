@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"github.com/goombaio/namegenerator"
+	"github.com/google/uuid"
 )
 
 var (
@@ -150,37 +151,41 @@ func main(){
 		return
 	}
 	dek = dekFindResult["_id"].(primitive.Binary)
-
+	key, e := uuid.FromBytes(dek.Data)
+	if e != nil {
+		fmt.Printf("Error converting UUID")
+		exitCode = 1
+		return
+	}
 
 	db := "companyData"
 	collection := "employee"
 
-	schemaMap := bson.M{
-		db + "." + collection: bson.M{
-			"bsonType": "object",
-			"encryptMetadata": bson.M{
-				"keyId": bson.A{
-					dek,
-				},
-				"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
-			},
-			"properties": bson.M{
-				"name": bson.M{
-					"bsonType": "object",
-					"properties": bson.M{
-						"firstname": bson.M{
-							"encrypt": bson.M{
-								"bsonType":  "string",
-								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-							},
-						},
+	schemaMap := `{
+		"bsonType": "object",
+		"encryptMetadata": {
+			"keyId": [` + key.String() + `],
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+		},
+		"properties": {
+			"name": {
+				 "bsonType": "object",
+				 "properties": {
+					 "firstName": {
+						 "encrypt": {
+							 "bsonType": "string",
+							 "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+						 }
+					 },
 						// PUT MORE FIELDS IN HERE
 					},
 		// PUT THE REST OF YOUR SCHEMA MAP CODE HERE
-	}
+	}`
 
 	// Auto Encryption Client
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, schemaMap)
+  var testSchema bson.M 
+  json.Unmarshal([]byte(schemaMap), &testSchema)
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, &testSchema)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1

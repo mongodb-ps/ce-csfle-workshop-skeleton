@@ -4,6 +4,7 @@ import (
 	"C"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -94,23 +95,6 @@ func getDEK(c *mongo.ClientEncryption, altName string) (primitive.Binary, error)
 	return b, nil
 }
 
-func trashDEK(c *mongo.ClientEncryption, kp map[string]map[string]interface{}, kns string, keyID primitive.Binary) error {
-	var (
-		delResult *mongo.DeleteResult
-		err       error
-	)
-
-	delResult, err = // PUT CODE HERE TO DELETE DEK
-	if err != nil {
-		return err
-	}
-	if delResult.DeletedCount == 0 {
-		return errors.New("no DEK deleted")
-	}
-
-	return nil
-}
-
 func nameGenerator()(string, string) {
 	seed := time.Now().UTC().UnixNano()
 	nameGenerator := namegenerator.NewNameGenerator(seed)
@@ -139,6 +123,7 @@ func main() {
 		kmipEndpoint     = "csfle-kmip-" + PETNAME + ".mdbtraining.net"
 		kmipTLSConfig    *tls.Config
 		result           *mongo.InsertOneResult
+		delResult 			 *mongo.DeleteResult
 	)
 
 	defer func() {
@@ -236,69 +221,70 @@ func main() {
 
 	db := "companyData"
 	collection := "employee"
-
-	schemaMap := bson.M{
-		db + "." + collection: bson.M{
-			"bsonType": "object",
-			"encryptMetadata": bson.M{
-				"keyId": "/_id",
-				"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
-			},
-			"properties": bson.M{
-				"name": bson.M{
-					"bsonType": "object",
-					"properties": bson.M{
-						"firstName": bson.M{
-							"encrypt": bson.M{
-								"keyId": bson.A{
-									dek,
-								},
-								"bsonType":  "string",
-								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-							},
-						},
-						"lastName": bson.M{
-							"encrypt": bson.M{
-								"keyId": bson.A{
-									dek,
-								},
-								"bsonType":  "string",
-								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-							},
-						},
-						"othernames": bson.M{
-							"encrypt": bson.M{
-								"bsonType": "string",
-							},
-						},
-					},
-				},
-				"address": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "object",
-					},
-				},
-				"phoneNumber": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-				"salary": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "double",
-					},
-				},
-				"taxIdentifier": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-			},
+	
+	schemaMap := `{
+		"bsonType": "object",
+		"encryptMetadata": {
+			"keyId": "/_id",
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
 		},
-	}
+		"properties": {
+			"name": {
+				"bsonType": "object",
+				"properties": {
+					"firstName": {
+						"encrypt": {
+							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"bsonType": "string",
+							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+						 }
+					},
+					"lastName": {
+						"encrypt": {
+							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"bsonType": "string",
+							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+						 }
+					},
+					"otherNames": {
+						 "encrypt": {
+							 "bsonType": "string"
+						 }
+					 }
+				 }
+			 },
+			 "address": {
+				 "encrypt": {
+					 "bsonType": "object"
+				 }
+			 },
+			 "dob": {
+				 "encrypt": {
+					 "bsonType": "date"
+				 }
+			 },
+			 "phoneNumber": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 },
+			 "salary": {
+				 "encrypt": {
+					 "bsonType": "double"
+				 }
+			 },
+			 "taxIdentifier": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 }
+		 }
+		}`
 
 	// Auto Encryption Client
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, schemaMap)
+  var testSchema bson.M 
+  json.Unmarshal([]byte(schemaMap), &testSchema)
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1
@@ -325,10 +311,9 @@ func main() {
 	err = // PUT CODE HERE TO RETRIEVE DOCUMENT
 	fmt.Printf("%+v\n", findResult)
 
-	// MODIFY THE trashDEK function above
-	err = trashDEK(clientEncryption, kmsProvider, keySpace, employeeDEK)
+	delResult, err = // PUT CODE HERE TO DELETE DEK
 	if err != nil {
-		fmt.Printf("DEK deletion error: %s", err)
+		return err
 	}
 	// PUT SLEEP HERE FOR 60 SECONDS
 

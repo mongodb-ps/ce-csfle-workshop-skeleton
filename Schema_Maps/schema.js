@@ -4,7 +4,7 @@ db.getSiblingDB("companyData").runCommand({
     $jsonSchema: {
    "bsonType": "object",
    "encryptMetadata": {
-     "keyId": [UUID("585ea3df-b644-4204-a0d3-746f62ccbbfa")],
+     "keyId": [UUID("585ea3df-b644-4204-a0d3-746f62ccbbfa")], // this must be changed
      "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
    },
    "properties": {
@@ -17,7 +17,7 @@ db.getSiblingDB("companyData").runCommand({
               "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
             }
           },
-          "lasstName": {
+          "lastName": {
             "encrypt": {
               "bsonType": "string",
               "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"

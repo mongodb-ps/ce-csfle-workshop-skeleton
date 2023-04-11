@@ -35,7 +35,7 @@ def mdb_client(connection_string, auto_encryption_opts=None):
   """
 
   try:
-    client = MongoClient(connection_string)
+    client = MongoClient(connection_string, auto_encryption_opts=auto_encryption_opts)
     client.admin.command('hello')
     return client, None
   except (ServerSelectionTimeoutError, ConnectionFailure) as e:
@@ -82,8 +82,8 @@ def main():
   # Obviously this should not be hardcoded
   connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
-    PETNAME,
     quote_plus(MDB_PASSWORD),
+    PETNAME,
     quote_plus(CA_PATH)
   )
 
@@ -108,7 +108,7 @@ def main():
 
   # instantiate our MongoDB Client object
   client, err = mdb_client(connection_string)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
@@ -224,7 +224,7 @@ def main():
   )
 
   secure_client, err = mdb_client(connection_string, auto_encryption_opts=auto_encryption)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
   encrypted_db = secure_client[encrypted_db_name]
@@ -249,8 +249,10 @@ def main():
     sys.exit(1)
 
 
-  try: 
-    result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": firstname, "name.lastName": enc_last_name})
+  try:  
+    enc_last_name = client_encryption.encrypt(lastname, Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, employee_key_id)
+    enc_first_name = client_encryption.encrypt(firstname, Algorithm.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic, employee_key_id)
+    result = encrypted_db[encrypted_coll_name].find_one({"name.firstName": enc_first_name, "name.lastName": enc_last_name})
   except EncryptionError as e:
     print(f"Encryption error: {e}")
     sys.exit(1)

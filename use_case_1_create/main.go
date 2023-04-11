@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"github.com/goombaio/namegenerator"
+	"github.com/google/uuid"
 )
 
 var (
@@ -232,47 +233,59 @@ func main() {
 	db := "companyData"
 	collection := "employee"
 
-	schemaMap := bson.M{
-		db + "." + collection: bson.M{
-			"bsonType": "object",
-			"encryptMetadata": bson.M{
-				"keyId": , // PUT APPROPRIATE CODE OR VARIABLE HERE
-				"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
-			},
-			"properties": bson.M{
-				"name": bson.M{
-					"bsonType": "object",
-					"properties": bson.M{
-						"otherNames": bson.M{
-							"encrypt": bson.M{
-								"bsonType": "string",
-							},
-						},
-					},
-				},
-				"address": bson.M{
-						"encrypt": bson.M{
-							"bsonType": "object",
-						},
-					},
-				},
-				"phoneNumber": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-				"salary": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "double",
-					},
-				},
-				"taxIdentifier": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-			},
+	schemaMap := `{
+		"bsonType": "object",
+		"encryptMetadata": {
+			"keyId": ,// put your JOSN pointer here,
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
 		},
+		"properties": {
+			"name": {
+				"bsonType": "object",
+				"properties": {
+					"otherNames": {
+						 "encrypt": {
+							 "bsonType": "string"
+						 }
+					 }
+				 }
+			 },
+			 "address": {
+				 "encrypt": {
+					 "bsonType": "object"
+				 }
+			 },
+			 "dob": {
+				 "encrypt": {
+					 "bsonType": "date"
+				 }
+			 },
+			 "phoneNumber": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 },
+			 "salary": {
+				 "encrypt": {
+					 "bsonType": "double"
+				 }
+			 },
+			 "taxIdentifier": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 }
+		 }
+		}`
+
+	// Auto Encryption Client
+  var testSchema bson.M 
+  json.Unmarshal([]byte(schemaMap), &testSchema)
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
+	if err != nil {
+		fmt.Printf("MDB encrypted client error: %s\n", err)
+		exitCode = 1
+		return
 	}
 
 	// remove the otherNames field if it is nil
@@ -297,14 +310,6 @@ func main() {
 		return
 	}
 	payload["name"] = name
-
-	// Auto Encryption Client
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, schemaMap)
-	if err != nil {
-		fmt.Printf("MDB encrypted client error: %s\n", err)
-		exitCode = 1
-		return
-	}
 
 	encryptedColl := encryptedClient.Database(db).Collection(collection)
 

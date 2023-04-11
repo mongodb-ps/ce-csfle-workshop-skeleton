@@ -4,6 +4,7 @@ import (
 	"C"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -236,69 +237,70 @@ func main() {
 
 	db := "companyData"
 	collection := "employee"
-
-	schemaMap := bson.M{
-		db + "." + collection: bson.M{
-			"bsonType": "object",
-			"encryptMetadata": bson.M{
-				"keyId": "/_id",
-				"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
-			},
-			"properties": bson.M{
-				"name": bson.M{
-					"bsonType": "object",
-					"properties": bson.M{
-						"firstName": bson.M{
-							"encrypt": bson.M{
-								"keyId": bson.A{
-									dek,
-								},
-								"bsonType":  "string",
-								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-							},
-						},
-						"lastName": bson.M{
-							"encrypt": bson.M{
-								"keyId": bson.A{
-									dek,
-								},
-								"bsonType":  "string",
-								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
-							},
-						},
-						"otherNames": bson.M{
-							"encrypt": bson.M{
-								"bsonType": "string",
-							},
-						},
-					},
-				},
-				"address": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "object",
-					},
-				},
-				"phoneNumber": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-				"salary": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "double",
-					},
-				},
-				"taxIdentifier": bson.M{
-					"encrypt": bson.M{
-						"bsonType": "string",
-					},
-				},
-			},
+	
+	schemaMap := `{
+		"bsonType": "object",
+		"encryptMetadata": {
+			"keyId": "/_id",
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
 		},
-	}
+		"properties": {
+			"name": {
+				"bsonType": "object",
+				"properties": {
+					"firstName": {
+						"encrypt": {
+							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"bsonType": "string",
+							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+						 }
+					},
+					"lastName": {
+						"encrypt": {
+							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"bsonType": "string",
+							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+						 }
+					},
+					"otherNames": {
+						 "encrypt": {
+							 "bsonType": "string"
+						 }
+					 }
+				 }
+			 },
+			 "address": {
+				 "encrypt": {
+					 "bsonType": "object"
+				 }
+			 },
+			 "dob": {
+				 "encrypt": {
+					 "bsonType": "date"
+				 }
+			 },
+			 "phoneNumber": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 },
+			 "salary": {
+				 "encrypt": {
+					 "bsonType": "double"
+				 }
+			 },
+			 "taxIdentifier": {
+				 "encrypt": {
+					 "bsonType": "string"
+				 }
+			 }
+		 }
+		}`
 
 	// Auto Encryption Client
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, schemaMap)
+  var testSchema bson.M 
+  json.Unmarshal([]byte(schemaMap), &testSchema)
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1

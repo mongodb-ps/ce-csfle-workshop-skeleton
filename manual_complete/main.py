@@ -98,8 +98,8 @@ def main():
   # Obviously this should not be hardcoded
   connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
-    PETNAME,
     quote_plus(MDB_PASSWORD),
+    PETNAME,
     quote_plus(CA_PATH)
   )
 
@@ -124,7 +124,7 @@ def main():
 
   # instantiate our MongoDB Client object
   client, err = mdb_client(connection_string)
-  if err != None:
+  if err is not None:
     print(err)
     sys.exit(1)
 
