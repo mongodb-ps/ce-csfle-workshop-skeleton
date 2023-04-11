@@ -169,19 +169,19 @@ func main() {
 				"name": bson.M{
 					"bsonType": "object",
 					"properties": bson.M{
-						"firstname": bson.M{
+						"firstName": bson.M{
 							"encrypt": bson.M{
 								"bsonType":  "string",
 								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
 							},
 						},
-						"lastname": bson.M{
+						"lastnNme": bson.M{
 							"encrypt": bson.M{
 								"bsonType":  "string",
 								"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
 							},
 						},
-						"othernames": bson.M{
+						"otherNames": bson.M{
 							"encrypt": bson.M{
 								"bsonType": "string",
 							},
@@ -189,23 +189,18 @@ func main() {
 					},
 				},
 				"address": bson.M{
-					"bsonType": "object",
-					"properties": bson.M{
-						"streetAddress": bson.M{
-							"encrypt": bson.M{
-								"bsonType": "string",
-							},
-						},
-						"suburbCounty": bson.M{
-							"encrypt": bson.M{
-								"bsonType": "string",
-							},
-						},
+					"encrypt": bson.M{
+						"bsonType": "object",
 					},
 				},
 				"phoneNumber": bson.M{
 					"encrypt": bson.M{
 						"bsonType": "string",
+					},
+				},
+				"dob": bson.M{
+					"encrypt": bson.M{
+						"bsonType": "date",
 					},
 				},
 				"salary": bson.M{

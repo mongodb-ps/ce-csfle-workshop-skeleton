@@ -41,8 +41,9 @@ def mdb_client(connection_string, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
+    PETNAME,
     quote_plus(MDB_PASSWORD),
     quote_plus(CA_PATH)
   )
@@ -83,17 +84,19 @@ def main():
   schema_map = {
     "companyData.employee": {
       "bsonType": "object",
-      "encryptMeta": {
-        "keyId": data_key_id_1,
+      "encryptMetadata": {
+        "keyId": [data_key_id_1],
         "algorithm": # PUT APPROPRIATE ALGORITHHM HERE
       },
       "properties": {
         "name": {
           "bsonType": "object",
-          "firstName": {
-            "encrypt" : {
-              "bsonType": "string",
-              "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+          "properties": {
+            "firstName": {
+              "encrypt" : {
+                "bsonType": "string",
+                "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+              },
             },
             # PUT MORE FIELDS IN HERE
           }

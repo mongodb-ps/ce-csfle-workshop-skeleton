@@ -43,8 +43,9 @@ def mdb_client(connection_string, auto_encryption_opts=None):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
+    PETNAME,
     quote_plus(MDB_PASSWORD),
     quote_plus(CA_PATH)
   )

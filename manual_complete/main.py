@@ -96,8 +96,9 @@ def traverse_bson(client_encryption, data):
 def main():
 
   # Obviously this should not be hardcoded
-  connection_string = "mongodb://%s:%s@csfle-mongodb-{PETNAME}.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
+  connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
     quote_plus(APP_USER),
+    PETNAME,
     quote_plus(MDB_PASSWORD),
     quote_plus(CA_PATH)
   )
