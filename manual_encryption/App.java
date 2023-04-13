@@ -236,8 +236,47 @@ public class App {
             UUID dataKey1 = binKey.asUuid();
             System.out.println("Got dataKey1: " + dataKey1.toString());
 
-            // WRITE CODE HERE TO ENCRYPT THE APPROPRIATE FIELDS
-            // Don't forget to handle to event of name.otherNames being null
+
+            //  Do deterministic fields
+            EncryptOptions optionsDetermistic = new EncryptOptions(/* WRITE CODE HERE*/).keyId(new BsonBinary(/* WRITE CODE HERE*/));
+            BsonDocument encryptedPayload = payload.toBsonDocument();
+            // Countdown over all eight fields to be encrypted
+            CountDownLatch allFieldsLatch = new CountDownLatch(8);
+
+            BsonDocument namePayload = (BsonDocument) encryptedPayload.get("name");
+
+            for (String key: new String[] { "first_name", "last_name" }) {
+                ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
+                    encVal -> namePayload.put(key, encVal),
+                    allFieldsLatch
+                );
+                /* WRITE CODE HERE*/.subscribe(encSet);
+            }
+
+            // Do random fields
+            EncryptOptions optionsRandom = new EncryptOptions(/* WRITE CODE HERE*/).keyId(new BsonBinary(/* WRITE CODE HERE*/));
+            if (namePayload.get("othernames") instanceof BsonNull) {
+                /* WRITE CODE HERE to delete field*/
+                allFieldsLatch.countDown();
+            } else {
+                String key = "othernames";
+                ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
+                    encVal -> namePayload.put(key, encVal),
+                    allFieldsLatch
+                );
+                /* WRITE CODE HERE*/.subscribe(encSet);
+            }
+
+
+            for (String key: new String[] { "address", "dob", "phoneNumber", "salary", "taxIdentifier" }) {
+                ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
+                    encVal -> encryptedPayload.put(key, encVal),
+                    allFieldsLatch
+                );
+                /* WRITE CODE HERE*/.subscribe(encSet);
+            }
+
+            allFieldsLatch.await(60, TimeUnit.SECONDS);
 
 
             // Test if the data is encrypted
