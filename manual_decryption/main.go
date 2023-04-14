@@ -31,7 +31,7 @@ func createClient(c string) (*mongo.Client, error) {
 }
 
 // Function to create the MognoDB ClientEncryption instance
-func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns stringi, tlsOps map[string]*tls.Config) (*mongo.ClientEncryption, error) {
+func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]interface{}, kns string, tlsOps map[string]*tls.Config) (*mongo.ClientEncryption, error) {
 	o := options.ClientEncryption().SetKeyVaultNamespace(kns).SetKmsProviders(kp).SetTLSConfig(tlsOps)
 	client, err := mongo.NewClientEncryption(c, o)
 	if err != nil {
@@ -292,7 +292,6 @@ func main() {
 	fmt.Printf("%+v\n", findResult)
 
 	// WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
-	encryptedName = 
 	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
 	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
 	outputData, err = traverseBson(clientEncryption, findResult)
