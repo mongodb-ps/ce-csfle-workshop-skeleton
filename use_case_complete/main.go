@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"encoding/base64"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -337,7 +337,7 @@ func main() {
 	}
 	fmt.Printf("%+v\n", findResult)
 
-	err = trashDEK(clientEncryption, kmsProvider, keySpace, employeeDEK)
+	trashDEK(clientEncryption, kmsProvider, keySpace, employeeDEK)
 	if err != nil {
 		fmt.Printf("DEK deletion error: %s", err)
 	}
