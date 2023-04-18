@@ -240,8 +240,10 @@ func main() {
 		return
 	}
 	fmt.Print(result.InsertedID)
-	err = encryptedColl.FindOne(context.TODO(), bson.M{"salary": 999999.99}).Decode(&findResult) // As per the excercise attempt to query salary field
-	//err = encryptedColl.FindOne(context.TODO(), bson.M{"name.firstName": firstname}).Decode(&findResult) // Uncomment this to attemt to query name.firstName field as per excercise
+
+  err = encryptedColl.FindOne(context.TODO(), bson.M{"salary": 999999.99}).Decode(&findResult) // As per the excercise attempt to query salary field
+	//err = encryptedColl.FindOne(context.TODO(), bson.M{"name.firstName": firstname}).Decode(&findResult) // Uncomment this to attemt to query name.firstName
+
 	if err != nil {
 		fmt.Printf("MongoDB find error: %s\n", err)
 		exitCode = 1
