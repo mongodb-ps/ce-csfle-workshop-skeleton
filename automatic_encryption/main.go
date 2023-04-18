@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
-
+	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -185,7 +185,7 @@ func main(){
 	// Auto Encryption Client
   var testSchema bson.M 
   json.Unmarshal([]byte(schemaMap), &testSchema)
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, &testSchema)
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1
