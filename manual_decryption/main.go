@@ -292,7 +292,6 @@ func main() {
 	fmt.Printf("%+v\n", findResult)
 
 	// WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
-	encryptedName = 
 	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
 	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
 	outputData, err = traverseBson(clientEncryption, findResult)

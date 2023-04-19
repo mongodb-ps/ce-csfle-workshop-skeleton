@@ -337,7 +337,7 @@ func main() {
 	}
 	fmt.Printf("%+v\n", findResult)
 
-	err = trashDEK(clientEncryption, kmsProvider, keySpace, employeeDEK)
+	trashDEK(clientEncryption, kmsProvider, keySpace, employeeDEK)
 	if err != nil {
 		fmt.Printf("DEK deletion error: %s", err)
 	}
