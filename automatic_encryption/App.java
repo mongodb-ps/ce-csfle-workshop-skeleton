@@ -140,8 +140,8 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Will",
-    "last_name": "T",
+    "firstName": "Will",
+    "lastName": "T",
     "othernames": null,
   },
   "address": {
@@ -153,16 +153,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "+61 400 000 111",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 89000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -266,7 +257,7 @@ public class App {
         "name" : {
     "bsonType": "object",
         "properties" : {
-        "first_name" : {
+        "firstName" : {
             "encrypt" : {
             "bsonType" : "string",
             "algorithm" : "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",

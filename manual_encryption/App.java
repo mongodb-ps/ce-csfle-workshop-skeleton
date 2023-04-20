@@ -143,8 +143,8 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Manish",
-    "last_name": "Engineer",
+    "firstName": "Manish",
+    "lastName": "Engineer",
     "othernames": null,
   },
   "address": {
@@ -156,16 +156,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "1800MONGO",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 89000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -245,7 +236,7 @@ public class App {
 
             BsonDocument namePayload = (BsonDocument) encryptedPayload.get("name");
 
-            for (String key: new String[] { "first_name", "last_name" }) {
+            for (String key: new String[] { "firstName", "lastName" }) {
                 ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
                     encVal -> namePayload.put(key, encVal),
                     allFieldsLatch
@@ -280,7 +271,7 @@ public class App {
 
 
             // Test if the data is encrypted
-            for (String fieldName : new String[]{"first_name", "last_name"}) {
+            for (String fieldName : new String[]{"firstName", "lastName"}) {
                 Object fieldVal = namePayload.get(fieldName);
                 if ( ! (fieldVal instanceof BsonBinary) || ! (((BsonBinary) fieldVal).getType() == 6) ) {
                     System.out.println(fieldName + " is not encrypted - " + fieldVal);
