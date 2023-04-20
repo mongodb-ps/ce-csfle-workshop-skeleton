@@ -269,7 +269,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	fmt.Print(result.InsertedID)
+	fmt.Println(result.InsertedID)
 
 	// WRITE CODE AS REQUIRED TO QUERY FOR THE name.firstName
 	encryptedName, err = encryptManual(// put required variables here)
@@ -279,22 +279,6 @@ func main() {
 		return
 	}
 	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
-	if err != nil {
-		fmt.Printf("MongoDB find error: %s\n", err)
-		exitCode = 1
-		return
-	}
-	if len(findResult) == 0 {
-		fmt.Println("Cannot find document")
-		exitCode = 1
-		return
-	}
-	fmt.Printf("%+v\n", findResult)
-
-	// WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
-	encryptedName = 
-	err = coll.FindOne(context.TODO(), bson.M{"name.firstName": encryptedName}).Decode(&findResult)
-	// GO TO THE decryptManual FUNCTION AND WRITE THE CODE
 	outputData, err = traverseBson(clientEncryption, findResult)
 	if err != nil {
 		fmt.Printf("Encryption error: %s\n", err)
