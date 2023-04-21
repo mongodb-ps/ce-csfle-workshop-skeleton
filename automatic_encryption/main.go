@@ -185,10 +185,10 @@ func main(){
 	var testSchema bson.Raw
 	err = bson.UnmarshalExtJSON([]byte(schemaMap), true, &testSchema)
 	if err != nil {
-		fmt.Printf("UNnmarshalError: %s\n", err)
+		fmt.Printf("Unmarshal Error: %s\n", err)
 	}
 	completeMap := map[string]interface{}{
-		"employData.employee": testSchema,
+		db + "." + collection: testSchema,
 	}
 	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, completeMap)
 	if err != nil {

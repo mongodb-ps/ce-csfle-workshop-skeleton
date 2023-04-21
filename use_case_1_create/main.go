@@ -286,10 +286,10 @@ func main() {
 	var testSchema bson.Raw
 	err = bson.UnmarshalExtJSON([]byte(schemaMap), true, &testSchema)
 	if err != nil {
-					fmt.Printf("UNnmarshalError: %s\n",err)
+					fmt.Printf("Unmarshal Error: %s\n",err)
 	}
 	completeMap := map[string]interface{}{
-					"employData.employee": testSchema,
+		db + "." + collection: testSchema,
 	}
 	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, completeMap)
 	if err != nil {
@@ -306,7 +306,7 @@ func main() {
 	}
 
 	// manually encrypt our firstName and lastName values:
-	name["firstName"], err = encryptManual(clientEncryption, dek, "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic", name["firstName"])
+	encryptedFirstName, err = encryptManual(clientEncryption, dek, "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic", name["firstName"])
 	if err != nil {
 		fmt.Printf("ClientEncrypt error: %s\n", err)
 		exitCode = 1
@@ -319,6 +319,7 @@ func main() {
 		exitCode = 1
 		return
 	}
+	name["firstName"] = encryptedFirstName
 	payload["name"] = name
 
 	encryptedColl := encryptedClient.Database(db).Collection(collection)
@@ -331,7 +332,7 @@ func main() {
 	}
 	fmt.Print(result.InsertedID)
 
-	err = encryptedColl.FindOne(context.TODO(), bson.M{"name.firstName": name["firstName"]}).Decode(&findResult)
+	err = encryptedColl.FindOne(context.TODO(), bson.M{"name.firstName": encryptedFirstName}).Decode(&findResult)
 	if err != nil {
 		fmt.Printf("MongoDB find error: %s\n", err)
 		exitCode = 1
