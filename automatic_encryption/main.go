@@ -4,18 +4,16 @@ import (
 	"C"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"time"
-	"encoding/json"
+	
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"github.com/goombaio/namegenerator"
-	"github.com/google/uuid"
 )
 
 var (
@@ -44,11 +42,16 @@ func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]inte
 }
 
 func createAutoEncryptionClient(c string, ns string, kms map[string]map[string]interface{}, tlsOps map[string]*tls.Config, s bson.M) (*mongo.Client, error) {
+	extraOptions := map[string]interface{}{
+		"cryptSharedLibPath":     "/lib/mongo_crypt_v1.so",
+		"cryptSharedLibRequired": true,
+	}
 	autoEncryptionOpts := options.AutoEncryption().
 		SetKeyVaultNamespace(ns).
 		SetKmsProviders(kms).
 		SetSchemaMap(s).
-		SetTLSConfig(tlsOps)
+		SetTLSConfig(tlsOps).
+		SetExtraOptions(extraOptions)
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c).SetAutoEncryptionOptions(autoEncryptionOpts))
 
@@ -152,11 +155,6 @@ func main(){
 		return
 	}
 	dek = dekFindResult["_id"].(primitive.Binary)
-	key, e := uuid.FromBytes(dek.Data)
-	if e != nil {
-		fmt.Printf("Error converting UUID")
-		exitCode = 1
-		return
 	}
 
 	db := "companyData"
@@ -165,8 +163,8 @@ func main(){
 	schemaMap := `{
 		"bsonType": "object",
 		"encryptMetadata": {
-			"keyId": [` + key.String() + `],
-			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+			"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `],
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
 		},
 		"properties": {
 			"name": {
@@ -184,9 +182,15 @@ func main(){
 	}`
 
 	// Auto Encryption Client
-  var testSchema bson.M 
-  json.Unmarshal([]byte(schemaMap), &testSchema)
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
+	var testSchema bson.Raw
+	err = bson.UnmarshalExtJSON([]byte(schemaMap), true, &testSchema)
+	if err != nil {
+		fmt.Printf("UNnmarshalError: %s\n", err)
+	}
+	completeMap := map[string]interface{}{
+		"employData.employee": testSchema,
+	}
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, completeMap)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1
