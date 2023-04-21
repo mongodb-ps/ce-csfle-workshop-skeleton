@@ -131,13 +131,6 @@ public class App {
         return clientEncryption;
     }
 
-    public UUID getDekUUID(MongoClient client, MongoNamespace keyvaultNamespace) {
-
-        // PUT CODE HERE TO RETRIEVE OUR COMMON (FIRST) DEK
-        UUID dataKey1 = dataKeyDoc.get("_id", UUID.class);
-        return dataKey1;
-    }
-
     public Document getPayload() {
         Random random = new Random();
         String employeeId = Integer.toString(10000 + random.nextInt(90000));
@@ -304,13 +297,11 @@ public class App {
             // Create ClientEncryption instance for creating DEks and manual encryption
             clientEncryption = app.getClientEncryption(connectionString, keyvaultNamespace, kmsProvider);
 
-            UUID dataKey1 = app.getDekUUID(client, keyvaultNamespace);
-            System.out.println("dataKey1: " + dataKey1.toString());
-
             Document payload = app.getPayload();
 
+            UUID employeeKeyId = null;
             try {
-                UUID employeeKeyId = app.getEmployeeDekUUID(client,
+                employeeKeyId = app.getEmployeeDekUUID(client,
                     connectionString, 
                     kmsProvider, 
                     provider, 
@@ -325,7 +316,7 @@ public class App {
 
 
             // Get schema map
-            BsonDocument schema = app.getSchemaDocument(dataKey1);
+            BsonDocument schema = app.getSchemaDocument(employeeKeyId);
             Map<String, BsonDocument> schemaMap = new HashMap<String, BsonDocument>();
             schemaMap.put(encryptedDbName + "." + encryptedCollName, schema);
 

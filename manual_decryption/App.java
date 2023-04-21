@@ -143,8 +143,8 @@ public class App {
 {
   "_id": 2316,
   "name": {
-    "first_name": "Kuber",
-    "last_name": "Engineer",
+    "firstName": "Kuber",
+    "lastName": "Engineer",
     "othernames": null,
   },
   "address": {
@@ -156,16 +156,7 @@ public class App {
   },
   "dob": ISODate("1989-01-01T00:00:00.000Z"),
   "phoneNumber": "1800MONGO",
-  "salary": {
-    "current": 99000.00,
-    "startDate": ISODate("2022-06-01T00:00:00.000Z"),
-    "history": [
-      {
-        "salary": 89000.00,
-        "startDate": ISODate("2021-08-11T00:00:00.000Z")
-      }
-    ]
-  },
+  "salary": 89000.00,
   "taxIdentifier": "103-443-923",
   "role": [
     "IC"
@@ -356,7 +347,7 @@ public class App {
 
             BsonDocument namePayload = (BsonDocument) encryptedPayload.get("name");
 
-            for (String key: new String[] { "first_name", "last_name" }) {
+            for (String key: new String[] { "firstName", "lastName" }) {
                 ObservableSubscriber<BsonValue> encSet = new ConsumerSubscriber<BsonValue>(
                     encVal -> namePayload.put(key, encVal),
                     allFieldsLatch
@@ -390,7 +381,7 @@ public class App {
             allFieldsLatch.await(60, TimeUnit.SECONDS);
 
             // Test if the data is encrypted
-            for (String fieldName : new String[]{"first_name", "last_name"}) {
+            for (String fieldName : new String[]{"firstName", "lastName"}) {
                 Object fieldVal = namePayload.get(fieldName);
                 if ( ! (fieldVal instanceof BsonBinary) || ! (((BsonBinary) fieldVal).getType() == 6) ) {
                     System.out.println(fieldName + " is not encrypted - " + fieldVal);
@@ -414,7 +405,7 @@ public class App {
 
             BsonBinary encryptedName = // WRITE CODE TO ENCRYPT THE NAME WE ARE GOING TO QUERY FOR
             ObservableSubscriber<Document> docSubscriber = new OperationSubscriber<Document>();
-            encryptedColl.find(eq("name.first_name", encryptedName))
+            encryptedColl.find(eq("name.firstName", encryptedName))
                 .subscribe(docSubscriber);
             Document encryptedResult = docSubscriber.first();
             System.out.println(encryptedResult.toJson());
@@ -422,8 +413,8 @@ public class App {
             
             Map<String, String[][]> schemaMap = new HashMap<String, String[][]>();
             schemaMap.put("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic", new String[][] {
-                new String[]{"name", "first_name"},
-                new String[]{"name", "last_name"},
+                new String[]{"name", "firstName"},
+                new String[]{"name", "lastName"},
             });
             schemaMap.put("AEAD_AES_256_CBC_HMAC_SHA_512-Random", new String[][] {
                 new String[]{"name", "othernames"},

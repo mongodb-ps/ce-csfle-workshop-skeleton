@@ -326,7 +326,7 @@ public class App {
                 // TODO - PUT CODE HERE TO QUERY THE SALARY FIELD
                 Document decryptedResult = docSubscriber.first();
 
-                // TODO - PUT CODE HERE TO PERFORM A RANGE QUERY on "name.first_name"
+                // TODO - PUT CODE HERE TO PERFORM A RANGE QUERY on "name.firstName"
                 decryptedResult = docSubscriber.first();
 
             }
