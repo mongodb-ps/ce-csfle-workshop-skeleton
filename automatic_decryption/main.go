@@ -4,7 +4,6 @@ import (
 	"C"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"os"
 	"encoding/base64"
@@ -161,7 +160,7 @@ func main() {
 		"bsonType": "object",
 		"encryptMetadata": {
 			"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `],
-			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
 		},
 		"properties": {
 			"name": {
@@ -215,9 +214,15 @@ func main() {
 		}`
 
 	// Auto Encryption Client
-	var testSchema bson.M 
-	json.Unmarshal([]byte(schemaMap), &testSchema)
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
+	var testSchema bson.Raw
+	err = bson.UnmarshalExtJSON([]byte(schemaMap), true, &testSchema)
+	if err != nil {
+		fmt.Printf("UNnmarshalError: %s\n", err)
+	}
+	completeMap := map[string]interface{}{
+		"employData.employee": testSchema,
+	}
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, completeMap)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1

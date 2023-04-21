@@ -4,7 +4,7 @@ import (
 	"C"
 	"context"
 	"crypto/tls"
-	"encoding/json"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -46,11 +46,16 @@ func createManualEncryptionClient(c *mongo.Client, kp map[string]map[string]inte
 }
 
 func createAutoEncryptionClient(c string, ns string, kms map[string]map[string]interface{}, tlsOps map[string]*tls.Config, s bson.M) (*mongo.Client, error) {
+	extraOptions := map[string]interface{}{
+		"cryptSharedLibPath":     "/lib/mongo_crypt_v1.so",
+		"cryptSharedLibRequired": true,
+	}
 	autoEncryptionOpts := options.AutoEncryption().
 		SetKeyVaultNamespace(ns).
 		SetKmsProviders(kms).
 		SetSchemaMap(s).
-		SetTLSConfig(tlsOps)
+		SetTLSConfig(tlsOps).
+		SetExtraOptions(extraOptions)
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(c).SetAutoEncryptionOptions(autoEncryptionOpts))
 
@@ -226,7 +231,7 @@ func main() {
 		"bsonType": "object",
 		"encryptMetadata": {
 			"keyId": "/_id",
-			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random",
+			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
 		},
 		"properties": {
 			"name": {
@@ -282,9 +287,15 @@ func main() {
 		}`
 
 	// Auto Encryption Client
-  var testSchema bson.M 
-  json.Unmarshal([]byte(schemaMap), &testSchema)
-	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, testSchema)
+	var testSchema bson.Raw
+	err = bson.UnmarshalExtJSON([]byte(schemaMap), true, &testSchema)
+	if err != nil {
+		fmt.Printf("UNnmarshalError: %s\n", err)
+	}
+	completeMap := map[string]interface{}{
+		"employData.employee": testSchema,
+	}
+	encryptedClient, err = createAutoEncryptionClient(connectionString, keySpace, kmsProvider, kmsTLSOptions, completeMap)
 	if err != nil {
 		fmt.Printf("MDB encrypted client error: %s\n", err)
 		exitCode = 1
