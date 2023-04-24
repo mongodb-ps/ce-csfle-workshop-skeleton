@@ -338,7 +338,12 @@ func main() {
 
 	delResult, err = // PUT CODE HERE TO DELETE DEK
 	if err != nil {
-		return err
+		fmt.Printf("Delete error: %s\n", err)
+		exitCode = 1
+		return
+	}
+	if delResult.DeletedCount == 0 {
+		fmt.Println("no DEK deleted")
 	}
 	// PUT SLEEP HERE FOR 60 SECONDS
 
