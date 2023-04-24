@@ -239,14 +239,28 @@ func main() {
 				"properties": {
 					"firstName": {
 						"encrypt": {
-							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"keyId": [ 
+								{
+									"$binary": {
+										"base64": "` + base64.StdEncoding.EncodeToString(dek.Data) + `",
+										"subType": "04"
+									}
+								}
+							],
 							"bsonType": "string",
 							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
 						 }
 					},
 					"lastName": {
 						"encrypt": {
-							"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data) + `]
+							"keyId": [ 
+								{
+									"$binary": {
+										"base64": "` + base64.StdEncoding.EncodeToString(dek.Data) + `",
+										"subType": "04"
+									}
+								}
+							],
 							"bsonType": "string",
 							"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
 						 }
