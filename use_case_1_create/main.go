@@ -139,6 +139,7 @@ func main() {
 		connectionString = "mongodb://app_user:" + MDB_PASSWORD + "@csfle-mongodb-" + PETNAME + ".mdbtraining.net/?replicaSet=rs0&tls=true&tlsCAFile=%2Fetc%2Fpki%2Ftls%2Fcerts%2Fca.cert"
 		dek              primitive.Binary
 		encryptedClient  *mongo.Client
+		encryptedFirstName primitive.Binary
 		err							 error
 		exitCode         = 0
 		findResult			 bson.M
