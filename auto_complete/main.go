@@ -164,7 +164,14 @@ func main() {
 	schemaMap := `{
 		"bsonType": "object",
 		"encryptMetadata": {
-			"keyId": [` + base64.StdEncoding.EncodeToString(dek.Data)+ `],
+			"keyId": [ 
+				{
+					"$binary": {
+						"base64": "` + base64.StdEncoding.EncodeToString(dek.Data) + `",
+						"subType": "04"
+					}
+				}
+			],
 			"algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
 		},
 		"properties": {
