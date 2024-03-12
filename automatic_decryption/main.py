@@ -1,12 +1,18 @@
-from bson.binary import STANDARD, Binary, UUID_SUBTYPE
-from bson.codec_options import CodecOptions
-from datetime import datetime
-from pymongo import MongoClient
-from pymongo.encryption_options import AutoEncryptionOpts
-from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
-from urllib.parse import quote_plus
-import names
-import sys
+try:
+  from os import path
+  from sys import version_info
+  from bson.binary import STANDARD, Binary, UUID_SUBTYPE
+  from bson.codec_options import CodecOptions
+  from datetime import datetime
+  from pymongo import MongoClient
+  from pymongo.encryption_options import AutoEncryptionOpts
+  from pymongo.errors import EncryptionError, ServerSelectionTimeoutError, ConnectionFailure
+  from urllib.parse import quote_plus
+  import names
+  import sys
+except ImportError as e:
+  print(f"Import error for {path.basename(__file__)}: {e}")
+  exit(1)
 
 
 # IN VALUES HERE!
@@ -15,7 +21,17 @@ MDB_PASSWORD =
 APP_USER = "app_user"
 CA_PATH = "/etc/pki/tls/certs/ca.cert"
 
-def mdb_client(connection_string, auto_encryption_opts=None):
+def check_python_version() -> str | None:
+  """Checks if the current Python version is supported.
+
+  Returns:
+    A string indicating that the current Python version is not supported, or None if the current Python version is supported.
+  """
+  if version_info.major < 3 or (version_info.major == 3 and version_info.minor < 10):
+    return f"Python version {version_info.major}.{version_info.minor} is not supported, please use 3.10 or higher"
+  return None
+
+def mdb_client(connection_string: str, auto_encryption_opts: tuple[dict | None] = None) -> tuple[MongoClient | None, str | None]:
   """ Returns a MongoDB client instance
   
   Creates a  MongoDB client instance and tests the client via a `hello` to the server
@@ -40,6 +56,12 @@ def mdb_client(connection_string, auto_encryption_opts=None):
     return None, f"Cannot connect to database, please check settings in config file: {e}"
 
 def main():
+
+  # check version of Python is correct
+  err = check_python_version()
+  if err is not None:
+    print(err)
+    exit(1)
 
   # Obviously this should not be hardcoded
   connection_string = "mongodb://%s:%s@csfle-mongodb-%s.mdbtraining.net/?serverSelectionTimeoutMS=5000&tls=true&tlsCAFile=%s" % (
